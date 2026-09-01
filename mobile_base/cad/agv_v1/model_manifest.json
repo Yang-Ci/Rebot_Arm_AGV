@@ -1,0 +1,232 @@
+{
+  "model": "reBotArm AGV chassis v1",
+  "units": "mm",
+  "source_base_stl": "rebotarm_ros2_RS/src/rebotarm_mujoco_rs/models/meshes/base_link.STL",
+  "dimensions": {
+    "chassis_length": 480.0,
+    "chassis_width": 420.0,
+    "chassis_height": 120.0,
+    "chassis_wall": 8.0,
+    "chassis_floor": 6.0,
+    "chassis_corner_radius": 18.0,
+    "top_cover_thickness": 6.0,
+    "arm_base_width": 140.0,
+    "arm_base_length": 200.0,
+    "arm_base_height": 75.0,
+    "arm_slot_x": 45.0,
+    "arm_slot_y": 90.0,
+    "adapter_width": 210.0,
+    "adapter_length": 280.0,
+    "adapter_thickness": 10.0,
+    "adapter_corner_radius": 10.0,
+    "arm_thread_pilot_diameter": 6.8,
+    "adapter_mount_clearance_diameter": 6.6,
+    "cable_port_length": 70.0,
+    "cable_port_width": 38.0,
+    "cable_port_y": -115.0,
+    "grommet_wall": 4.0,
+    "grommet_height": 6.0,
+    "latch_mount_width": 30.0,
+    "latch_mount_length": 52.0,
+    "latch_mount_base_thickness": 8.0,
+    "latch_mount_upright_height": 24.0,
+    "latch_mount_hole_diameter": 5.5,
+    "latch_mount_x": 88.0,
+    "latch_mount_hole_y": 16.0,
+    "wheel_diameter": 100.0,
+    "wheel_width": 40.0,
+    "wheel_axle_diameter": 16.0,
+    "wheel_center_x": 150.0,
+    "wheel_center_z": 55.0
+  },
+  "stl_metrics": {
+    "agv_bottom_tray_v1.stl": {
+      "triangles": 6380,
+      "min_mm": [
+        -240.0,
+        -210.0,
+        0.0
+      ],
+      "max_mm": [
+        240.0,
+        210.0,
+        120.0
+      ],
+      "size_mm": [
+        480.0,
+        420.0,
+        120.0
+      ],
+      "finite": true
+    },
+    "agv_chassis_assembly_v1.stl": {
+      "triangles": 28820,
+      "min_mm": [
+        -240.0,
+        -250.0,
+        0.0
+      ],
+      "max_mm": [
+        240.0,
+        250.0,
+        168.0
+      ],
+      "size_mm": [
+        480.0,
+        500.0,
+        168.0
+      ],
+      "finite": true
+    },
+    "agv_chassis_with_repository_base_v1.stl": {
+      "triangles": 118684,
+      "min_mm": [
+        -240.0,
+        -250.0,
+        0.0
+      ],
+      "max_mm": [
+        240.0,
+        250.0,
+        211.0
+      ],
+      "size_mm": [
+        480.0,
+        500.0,
+        211.0
+      ],
+      "finite": true
+    },
+    "agv_top_cover_v1.stl": {
+      "triangles": 8928,
+      "min_mm": [
+        -240.0,
+        -210.0,
+        0.0
+      ],
+      "max_mm": [
+        240.0,
+        210.0,
+        6.0
+      ],
+      "size_mm": [
+        480.0,
+        420.0,
+        6.0
+      ],
+      "finite": true
+    },
+    "arm_adapter_plate_v1.stl": {
+      "triangles": 8928,
+      "min_mm": [
+        -105.0,
+        -140.0,
+        0.0
+      ],
+      "max_mm": [
+        105.0,
+        140.0,
+        10.0
+      ],
+      "size_mm": [
+        210.0,
+        280.0,
+        10.0
+      ],
+      "finite": true
+    },
+    "cable_grommet_v1.stl": {
+      "triangles": 1280,
+      "min_mm": [
+        -38.9955,
+        -23.0,
+        0.0
+      ],
+      "max_mm": [
+        38.9955,
+        23.0,
+        6.0
+      ],
+      "size_mm": [
+        77.9909,
+        46.0,
+        6.0
+      ],
+      "finite": true
+    },
+    "fastener_placeholder_v1_print_x4.stl": {
+      "triangles": 2524,
+      "min_mm": [
+        -10.0,
+        -9.998,
+        0.0
+      ],
+      "max_mm": [
+        10.0,
+        9.998,
+        24.0
+      ],
+      "size_mm": [
+        20.0,
+        19.996,
+        24.0
+      ],
+      "finite": true
+    },
+    "latch_mount_v1_print_x2.stl": {
+      "triangles": 1940,
+      "min_mm": [
+        -15.0,
+        -26.0,
+        0.0
+      ],
+      "max_mm": [
+        15.0,
+        26.0,
+        32.0
+      ],
+      "size_mm": [
+        30.0,
+        52.0,
+        32.0
+      ],
+      "finite": true
+    },
+    "wheel_placeholder_v1_print_x4.stl": {
+      "triangles": 1264,
+      "min_mm": [
+        -49.9901,
+        -20.0,
+        -50.0
+      ],
+      "max_mm": [
+        49.9901,
+        20.0,
+        50.0
+      ],
+      "size_mm": [
+        99.9802,
+        40.0,
+        100.0
+      ],
+      "finite": true
+    }
+  },
+  "cadquery_shape_validity": {
+    "bottom_tray": true,
+    "top_cover": true,
+    "arm_adapter": true,
+    "latch_mount": true,
+    "cable_grommet": true,
+    "wheel_placeholder": true,
+    "fastener_placeholder": true,
+    "assembly_compound": true
+  },
+  "notes": [
+    "The four arm mount pilots align to the existing open U-slots at x=+-45, y=+-90 mm.",
+    "Use M8 threaded inserts for polymer adapters or tap M8 after drilling 6.8 mm in aluminium.",
+    "Latch mounts are geometry placeholders; use rated metal over-centre clamps for hardware.",
+    "Wheel files are interference-check placeholders, not tyre tread manufacturing models.",
+    "Assembly STL files are multi-body layout references; manufacture from the individual part files."
+  ]
+}
