@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<sdf version="1.9"><model name="rebotarm_yellow_cylinder"><link name="body">
+  <inertial><mass>0.042</mass><inertia><ixx>0.00001366</ixx><iyy>0.00001366</iyy><izz>0.00000840</izz></inertia></inertial>
+  <collision name="collision"><pose>0 0 0.026 0 0 0</pose><geometry><cylinder><radius>0.02</radius><length>0.052</length></cylinder></geometry><surface><friction><ode><mu>2</mu><mu2>2</mu2></ode></friction></surface></collision>
+  <visual name="visual"><pose>0 0 0.026 0 0 0</pose><geometry><cylinder><radius>0.02</radius><length>0.052</length></cylinder></geometry><material><ambient>0.82 0.52 0.01 1</ambient><diffuse>1 0.72 0.03 1</diffuse></material></visual>
+</link></model></sdf>

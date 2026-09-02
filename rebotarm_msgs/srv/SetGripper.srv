@@ -1,0 +1,5 @@
+float64 position
+float64 max_effort
+---
+bool success
+float64 reached_position

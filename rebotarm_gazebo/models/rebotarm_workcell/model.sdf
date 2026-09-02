@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<sdf version="1.9">
+  <model name="rebotarm_workcell">
+    <static>true</static>
+    <link name="table">
+      <collision name="table_collision">
+        <pose>0 0 0.085 0 0 0</pose>
+        <geometry><box><size>0.50 0.90 0.03</size></box></geometry>
+      </collision>
+      <visual name="table_visual">
+        <pose>0 0 0.085 0 0 0</pose>
+        <geometry><box><size>0.50 0.90 0.03</size></box></geometry>
+        <material><ambient>0.42 0.45 0.50 1</ambient><diffuse>0.52 0.55 0.60 1</diffuse><specular>0.25 0.25 0.25 1</specular></material>
+      </visual>
+      <visual name="red_target">
+        <pose>0.11 -0.16 0.101 0 0 0</pose>
+        <geometry><box><size>0.08 0.08 0.002</size></box></geometry>
+        <material><ambient>0.75 0.03 0.03 1</ambient><diffuse>0.9 0.05 0.05 1</diffuse></material>
+      </visual>
+      <visual name="yellow_target">
+        <pose>0.11 0 0.101 0 0 0</pose>
+        <geometry><box><size>0.08 0.08 0.002</size></box></geometry>
+        <material><ambient>0.8 0.55 0.02 1</ambient><diffuse>1 0.75 0.05 1</diffuse></material>
+      </visual>
+      <visual name="blue_target">
+        <pose>0.11 0.16 0.101 0 0 0</pose>
+        <geometry><box><size>0.08 0.08 0.002</size></box></geometry>
+        <material><ambient>0.03 0.12 0.75 1</ambient><diffuse>0.05 0.25 0.95 1</diffuse></material>
+      </visual>
+    </link>
+  </model>
+</sdf>

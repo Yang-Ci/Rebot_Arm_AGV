@@ -1,0 +1,109 @@
+<mujoco model="rebot_rs_grasp_scene">
+  <include file="rs_arm.xml"/>
+  <compiler angle="radian" meshdir="meshes/"/>
+
+  <option timestep="0.001" iterations="100" solver="Newton" integrator="Euler"/>
+
+  <contact>
+    <exclude body1="world" body2="link1"/>
+    <exclude body1="base_link" body2="link1"/>
+    <exclude body1="link1" body2="link2"/>
+    <exclude body1="link2" body2="link3"/>
+    <exclude body1="link2" body2="link5"/>
+    <exclude body1="link3" body2="link4"/>
+    <exclude body1="link3" body2="link5"/>
+    <exclude body1="link4" body2="link5"/>
+    <exclude body1="link5" body2="link6"/>
+    <exclude body1="gripper_left" body2="gripper_right"/>
+  </contact>
+
+  <statistic center="0.25 0 0.18" extent="0.62"/>
+
+  <visual>
+    <headlight diffuse="0.68 0.68 0.68" ambient="0.35 0.35 0.35" specular="0.1 0.1 0.1"/>
+    <rgba haze="0.15 0.22 0.30 1"/>
+    <global azimuth="125" elevation="-23"/>
+  </visual>
+
+  <asset>
+    <texture type="skybox" builtin="gradient" rgb1="0.30 0.48 0.65" rgb2="0.04 0.06 0.08" width="512" height="3072"/>
+    <texture type="2d" name="rs_ground_tex" builtin="checker" mark="edge" rgb1="0.22 0.28 0.31" rgb2="0.10 0.14 0.16" markrgb="0.72 0.78 0.80" width="300" height="300"/>
+    <material name="rs_ground" texture="rs_ground_tex" texuniform="true" texrepeat="6 6" reflectance="0.12"/>
+    <material name="rs_table" rgba="0.34 0.37 0.36 1"/>
+    <material name="rs_red" rgba="0.92 0.08 0.06 1"/>
+    <material name="rs_blue" rgba="0.03 0.42 0.94 1"/>
+    <material name="rs_yellow" rgba="1.00 0.72 0.04 1"/>
+    <material name="target_mat" rgba="1.00 0.55 0.12 0"/>
+    <material name="rs_zone_red" rgba="0.92 0.08 0.06 0.86"/>
+    <material name="rs_zone_blue" rgba="0.03 0.42 0.94 0.86"/>
+    <material name="rs_zone_yellow" rgba="1.00 0.72 0.04 0.86"/>
+  </asset>
+
+  <worldbody>
+    <light pos="0.25 -0.15 1.3" dir="0.05 0.1 -1" directional="true"/>
+    <camera name="overhead_rgb" mode="fixed" pos="0.34 0 0.78" xyaxes="1 0 0 0 1 0" fovy="48"/>
+    <geom name="floor" type="plane" size="1 1 0.04" material="rs_ground" friction="1.2 0.01 0.001"/>
+
+    <!-- Keep the 0.10 m work surface height while using the 30 mm DM-style tabletop. -->
+    <body name="task_table" pos="0.38 0 0.085">
+      <geom name="task_table_geom" type="box" size="0.25 0.45 0.015" material="rs_table"
+            friction="1.8 0.02 0.002" solref="0.003 1" solimp="0.98 0.995 0.0005"/>
+    </body>
+
+    <geom name="red_zone_n" type="box" pos="0.49 -0.120 0.1015" size="0.040 0.003 0.001"
+          material="rs_zone_red" contype="0" conaffinity="0"/>
+    <geom name="red_zone_s" type="box" pos="0.49 -0.200 0.1015" size="0.040 0.003 0.001"
+          material="rs_zone_red" contype="0" conaffinity="0"/>
+    <geom name="red_zone_e" type="box" pos="0.530 -0.160 0.1015" size="0.003 0.040 0.001"
+          material="rs_zone_red" contype="0" conaffinity="0"/>
+    <geom name="red_zone_w" type="box" pos="0.450 -0.160 0.1015" size="0.003 0.040 0.001"
+          material="rs_zone_red" contype="0" conaffinity="0"/>
+
+    <geom name="blue_zone_n" type="box" pos="0.49 0.040 0.1015" size="0.040 0.003 0.001"
+          material="rs_zone_blue" contype="0" conaffinity="0"/>
+    <geom name="blue_zone_s" type="box" pos="0.49 -0.040 0.1015" size="0.040 0.003 0.001"
+          material="rs_zone_blue" contype="0" conaffinity="0"/>
+    <geom name="blue_zone_e" type="box" pos="0.530 0.000 0.1015" size="0.003 0.040 0.001"
+          material="rs_zone_blue" contype="0" conaffinity="0"/>
+    <geom name="blue_zone_w" type="box" pos="0.450 0.000 0.1015" size="0.003 0.040 0.001"
+          material="rs_zone_blue" contype="0" conaffinity="0"/>
+
+    <geom name="yellow_zone_n" type="box" pos="0.49 0.200 0.1015" size="0.040 0.003 0.001"
+          material="rs_zone_yellow" contype="0" conaffinity="0"/>
+    <geom name="yellow_zone_s" type="box" pos="0.49 0.120 0.1015" size="0.040 0.003 0.001"
+          material="rs_zone_yellow" contype="0" conaffinity="0"/>
+    <geom name="yellow_zone_e" type="box" pos="0.530 0.160 0.1015" size="0.003 0.040 0.001"
+          material="rs_zone_yellow" contype="0" conaffinity="0"/>
+    <geom name="yellow_zone_w" type="box" pos="0.450 0.160 0.1015" size="0.003 0.040 0.001"
+          material="rs_zone_yellow" contype="0" conaffinity="0"/>
+
+    <body name="red_cube" pos="0.24 -0.30 0.1225">
+      <freejoint name="red_cube_freejoint"/>
+      <geom name="red_cube_geom" type="box" size="0.0225 0.0225 0.0225"
+            material="rs_red" mass="0.045" friction="3.5 0.08 0.01"
+            solref="0.002 1" solimp="0.99 0.995 0.0005"/>
+    </body>
+
+    <!-- Keep the blue block clear of the folded-arm singular region near the
+         home TCP.  This offset gives the fingers a straighter top-down path
+         while preserving separation from the stack and storage zones. -->
+    <body name="blue_block" pos="0.34 0.06 0.119">
+      <freejoint name="blue_block_freejoint"/>
+      <geom name="blue_block_geom" type="box" size="0.026 0.016 0.019"
+            material="rs_blue" mass="0.050" friction="3.5 0.08 0.01"
+            solref="0.002 1" solimp="0.99 0.995 0.0005"/>
+    </body>
+
+    <body name="yellow_cylinder" pos="0.33 -0.20 0.126">
+      <freejoint name="yellow_cylinder_freejoint"/>
+      <geom name="yellow_cylinder_geom" type="cylinder" size="0.020 0.026"
+            material="rs_yellow" mass="0.042" friction="3.5 0.08 0.01"
+            solref="0.002 1" solimp="0.99 0.995 0.0005"/>
+    </body>
+
+    <body name="ik_target" mocap="true" pos="0.34 0 0.20">
+      <geom name="ik_target_sphere" type="sphere" size="0.025" material="target_mat" contype="0" conaffinity="0"/>
+      <site name="ik_target_site" pos="0 0 0" size="0.035" rgba="1 0.55 0.12 0"/>
+    </body>
+  </worldbody>
+</mujoco>

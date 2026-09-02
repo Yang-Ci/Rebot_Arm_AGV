@@ -2,7 +2,13 @@
 Thumbs.db
 __pycache__/
 *.py[cod]
+.pytest_cache/
 .venv/
 build/
 dist/
-
+install/
+log/
+/frames_*.gv
+/frames_*.pdf
+/rebotarm_lab_slam.pgm
+/rebotarm_lab_slam.yaml

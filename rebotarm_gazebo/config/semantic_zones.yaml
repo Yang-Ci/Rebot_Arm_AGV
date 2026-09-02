@@ -1,0 +1,39 @@
+frame_id: map
+map:
+  size: [8.4, 6.4]
+  resolution: 0.05
+  origin: [-4.2, -3.2, 0.0]
+
+robot_start: {x: -2.45, y: -0.55, yaw: 0.0}
+
+# Polygons are counter-clockwise and expressed in map coordinates.
+zones:
+  storage:
+    type: storage
+    polygon: [[-3.75, 1.00], [-2.20, 1.00], [-2.20, 2.55], [-3.75, 2.55]]
+    approach: {x: -2.05, y: 1.75, yaw: 3.14159}
+  dynamic_obstacle_test:
+    type: dynamic_obstacle
+    polygon: [[-0.75, 1.10], [0.75, 1.10], [0.75, 2.35], [-0.75, 2.35]]
+  workcell:
+    type: manipulation
+    polygon: [[2.65, -0.60], [3.40, -0.60], [3.40, 0.60], [2.65, 0.60]]
+    pre_dock: {x: 2.15, y: 0.0, yaw: 0.0}
+    dock: {x: 2.50, y: 0.0, yaw: 0.0}
+    surface_z: 0.10
+    target_centers:
+      red: [3.11, -0.16, 0.101]
+      yellow: [3.11, 0.0, 0.101]
+      blue: [3.11, 0.16, 0.101]
+  charging:
+    type: charging
+    polygon: [[-3.75, -2.65], [-2.35, -2.65], [-2.35, -1.55], [-3.75, -1.55]]
+    dock: {x: -2.70, y: -2.10, yaw: 3.14159}
+  delivery:
+    type: delivery
+    polygon: [[2.35, -2.65], [3.75, -2.65], [3.75, -1.55], [2.35, -1.55]]
+    approach: {x: 2.65, y: -1.40, yaw: -1.5708}
+
+navigation:
+  nominal_corridor_width: 1.20
+  recommended_robot_radius: 0.36
