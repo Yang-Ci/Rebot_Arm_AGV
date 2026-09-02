@@ -31,12 +31,30 @@ WHEELS = {
     "rear_right": (-0.150, -0.230),
 }
 
-# The original task scene assumes a compact fixed base. The 0.48 m AGV front
-# edge reaches x=0.24, while the table starts at x=0.13. Move the task area by
-# only the minimum clearance needed; a larger offset pushes the red cube out of
-# the RS's reliable top-down grasp workspace.
-TASK_SCENE_X_OFFSET = 0.115
+# Match the Gazebo laboratory coordinates.  The AGV starts at (-2.45, -0.55)
+# and docks at x=2.50 in front of the manipulation table centred at x=3.00.
+# The source grasp scene table is centred at x=0.38, hence the 2.615 m offset.
+TASK_SCENE_X_OFFSET = 2.615
+AGV_START = (-2.45, -0.55)
 AGV_STL_SOURCE = Path(__file__).resolve().parents[1] / "mobile_base" / "cad" / "agv_v1" / "stl"
+
+FONT_5X7 = {
+    "A": ("01110", "10001", "10001", "11111", "10001", "10001", "10001"),
+    "C": ("01111", "10000", "10000", "10000", "10000", "10000", "01111"),
+    "D": ("11110", "10001", "10001", "10001", "10001", "10001", "11110"),
+    "E": ("11111", "10000", "10000", "11110", "10000", "10000", "11111"),
+    "G": ("01111", "10000", "10000", "10111", "10001", "10001", "01111"),
+    "H": ("10001", "10001", "10001", "11111", "10001", "10001", "10001"),
+    "I": ("11111", "00100", "00100", "00100", "00100", "00100", "11111"),
+    "K": ("10001", "10010", "10100", "11000", "10100", "10010", "10001"),
+    "L": ("10000", "10000", "10000", "10000", "10000", "10000", "11111"),
+    "M": ("10001", "11011", "10101", "10101", "10001", "10001", "10001"),
+    "N": ("10001", "11001", "10101", "10011", "10001", "10001", "10001"),
+    "O": ("01110", "10001", "10001", "10001", "10001", "10001", "01110"),
+    "R": ("11110", "10001", "10001", "11110", "10100", "10010", "10001"),
+    "V": ("10001", "10001", "10001", "10001", "10001", "01010", "00100"),
+    "Y": ("10001", "10001", "01010", "00100", "00100", "00100", "00100"),
+}
 
 
 def parse_xml(path: Path) -> ET.ElementTree:
@@ -61,6 +79,13 @@ def add_agv_assets(asset: ET.Element) -> None:
     asset.append(element("material", name="agv_body_mat", rgba="0.10 0.11 0.12 1"))
     asset.append(element("material", name="agv_adapter_mat", rgba="0.28 0.30 0.32 1"))
     asset.append(element("material", name="agv_wheel_mat", rgba="0.015 0.015 0.018 1"))
+    asset.append(element("material", name="lab_wall_mat", rgba="0.82 0.84 0.86 1"))
+    asset.append(element("material", name="lab_rack_mat", rgba="0.25 0.30 0.36 1"))
+    asset.append(element("material", name="lab_pallet_mat", rgba="0.62 0.32 0.10 1"))
+    asset.append(element("material", name="lab_charge_mat", rgba="0.04 0.52 0.42 0.32"))
+    asset.append(element("material", name="lab_delivery_mat", rgba="0.08 0.42 0.70 0.32"))
+    asset.append(element("material", name="lab_dynamic_mat", rgba="0.78 0.56 0.05 0.18"))
+    asset.append(element("material", name="lab_lane_mat", rgba="0.96 0.82 0.10 0.8"))
 
 
 def add_chassis(base_body: ET.Element) -> None:
@@ -138,6 +163,19 @@ def add_chassis(base_body: ET.Element) -> None:
     )
     chassis.append(laser)
 
+    imu = element("body", name="imu", pos="0 0 0.090")
+    imu.append(
+        element(
+            "site",
+            name="imu_site",
+            type="box",
+            size="0.012 0.009 0.004",
+            rgba="0.15 0.65 0.95 0.8",
+            group="2",
+        )
+    )
+    chassis.append(imu)
+
     for wheel_name, (x, y) in WHEELS.items():
         wheel = element("body", name=f"wheel_{wheel_name}", pos=f"{x:.3f} {y:.3f} 0.055")
         wheel.append(
@@ -201,24 +239,178 @@ def offset_task_scene(worldbody: ET.Element) -> None:
         child.set("pos", " ".join(values))
 
 
-def add_navigation_walls(worldbody: ET.Element) -> None:
+def add_lab_box(
+    worldbody: ET.Element,
+    name: str,
+    position: str,
+    size: str,
+    material: str = "lab_wall_mat",
+    *,
+    collision: bool = True,
+) -> None:
+    attributes = {
+        "name": name,
+        "type": "box",
+        "pos": position,
+        "size": size,
+        "material": material,
+    }
+    if not collision:
+        attributes.update({"contype": "0", "conaffinity": "0", "group": "1"})
+    worldbody.append(element("geom", **attributes))
+
+
+def add_flat_site(
+    worldbody: ET.Element,
+    name: str,
+    position: str,
+    size: str,
+    rgba: str,
+) -> None:
+    """Add a purely visual, sub-millimetre ground marker."""
+    worldbody.append(
+        element(
+            "site",
+            name=name,
+            type="box",
+            pos=position,
+            size=size,
+            rgba=rgba,
+            group="1",
+        )
+    )
+
+
+def add_ground_label(
+    worldbody: ET.Element,
+    name: str,
+    text: str,
+    x: float,
+    y: float,
+    half_width: float,
+    half_height: float,
+) -> None:
+    """Draw a compact 5x7 label from non-colliding visual sites."""
+    columns = len(text) * 5 + max(len(text) - 1, 0)
+    step = min(0.03, 1.6 * half_width / columns, 0.65 * half_height / 7)
+    start_x = x - 0.5 * (columns - 1) * step
+    for character_index, character in enumerate(text):
+        glyph = FONT_5X7[character]
+        for row, pixels in enumerate(glyph):
+            column = 0
+            while column < 5:
+                if pixels[column] == "0":
+                    column += 1
+                    continue
+                run_start = column
+                while column < 5 and pixels[column] == "1":
+                    column += 1
+                run_end = column - 1
+                run_cells = run_end - run_start + 1
+                center_column = character_index * 6 + 0.5 * (
+                    run_start + run_end
+                )
+                add_flat_site(
+                    worldbody,
+                    f"{name}_text_{character_index}_{row}_{run_start}",
+                    f"{start_x + center_column * step:.6f} "
+                    f"{y + (3 - row) * step:.6f} 0.00045",
+                    f"{0.42 * run_cells * step:.6f} {0.42 * step:.6f} 0.00005",
+                    "0.96 0.97 0.98 0.95",
+                )
+
+
+def add_lab_scene(worldbody: ET.Element) -> None:
+    # MJCF box sizes are half-extents.  These values match rebotarm_lab.sdf and
+    # generate_lab_map.py so the same saved occupancy map works in both engines.
     walls = (
-        ("north_wall", "0.000 1.000 0.255", "0.985 0.015 0.250"),
-        ("south_wall", "0.000 -1.000 0.255", "0.985 0.015 0.250"),
-        ("east_wall", "1.000 0.000 0.255", "0.015 0.985 0.250"),
-        ("west_wall", "-1.000 0.000 0.255", "0.015 0.985 0.250"),
+        ("west_boundary", "-4.000 0.000 0.240", "0.075 3.075 0.240"),
+        ("east_boundary", "4.000 0.000 0.240", "0.075 3.075 0.240"),
+        ("south_boundary", "0.000 -3.000 0.240", "4.075 0.075 0.240"),
+        ("north_boundary", "0.000 3.000 0.240", "4.075 0.075 0.240"),
+        ("storage_partition", "-1.300 1.800 0.240", "0.060 0.900 0.240"),
+        ("north_partition", "0.700 1.000 0.240", "1.000 0.060 0.240"),
+        ("south_partition", "-0.800 -1.600 0.240", "1.200 0.060 0.240"),
+        ("delivery_partition", "1.400 -1.800 0.240", "0.060 0.900 0.240"),
     )
     for name, position, size in walls:
-        worldbody.append(
-            element(
-                "geom",
-                name=name,
-                type="box",
-                pos=position,
-                size=size,
-                material="rs_table",
-            )
+        add_lab_box(worldbody, name, position, size)
+
+    add_lab_box(
+        worldbody,
+        "storage_rack",
+        "-3.000 1.750 0.550",
+        "0.600 0.550 0.550",
+        "lab_rack_mat",
+    )
+
+    pallet = element("body", name="dynamic_pallet", pos="0 1.72 0.20")
+    pallet.append(element("freejoint", name="dynamic_pallet_freejoint"))
+    pallet.append(
+        element(
+            "geom",
+            name="dynamic_pallet_geom",
+            type="box",
+            size="0.350 0.225 0.200",
+            material="lab_pallet_mat",
+            mass="12",
+            friction="1.2 0.02 0.002",
         )
+    )
+    worldbody.append(pallet)
+
+    zones = (
+        ("charging_zone", "CHARGE", -3.05, -2.10, 0.70, 0.55, "0.04 0.52 0.42 0.38"),
+        ("delivery_zone", "DELIVERY", 3.05, -2.10, 0.70, 0.55, "0.08 0.42 0.70 0.38"),
+        ("dynamic_zone", "DYNAMIC", 0.0, 1.73, 0.75, 0.625, "0.78 0.56 0.05 0.30"),
+        ("workcell_dock", "DOCK", 2.50, 0.0, 0.24, 0.25, "0.08 0.42 0.70 0.45"),
+    )
+    for name, label, x, y, half_width, half_height, rgba in zones:
+        add_flat_site(
+            worldbody,
+            name,
+            f"{x:.3f} {y:.3f} 0.0002",
+            f"{half_width:.3f} {half_height:.3f} 0.00005",
+            rgba,
+        )
+        add_ground_label(
+            worldbody, name, label, x, y, half_width, half_height
+        )
+
+    add_flat_site(
+        worldbody,
+        "lane_left",
+        "0 -0.62 0.0002",
+        "3.60 0.0125 0.00005",
+        "0.96 0.82 0.10 0.8",
+    )
+    add_flat_site(
+        worldbody,
+        "lane_right",
+        "0 0.62 0.0002",
+        "3.60 0.0125 0.00005",
+        "0.96 0.82 0.10 0.8",
+    )
+
+    worldbody.append(
+        element(
+            "light",
+            name="lab_sun",
+            pos="0 0 8",
+            dir="-0.45 0.2 -0.87",
+            directional="true",
+        )
+    )
+    worldbody.append(
+        element(
+            "camera",
+            name="lab_overview",
+            mode="fixed",
+            pos="0 -7.5 7.0",
+            xyaxes="1 0 0 0 0.682 0.731",
+            fovy="55",
+        )
+    )
 
 
 def build_model(package_dir: Path, output: Path) -> None:
@@ -255,7 +447,18 @@ def build_model(package_dir: Path, output: Path) -> None:
             child.set("pos", "0 0 0.005")
         if child.tag not in (ET.Comment, ET.ProcessingInstruction):
             arm_worldbody.insert(0, deepcopy(child))
-    add_navigation_walls(arm_worldbody)
+    floor = next(
+        (
+            child
+            for child in arm_worldbody
+            if child.tag == "geom" and child.get("name") == "floor"
+        ),
+        None,
+    )
+    if floor is not None:
+        floor.set("size", "4.2 3.2 0.04")
+        floor.set("pos", "0 0 0")
+    add_lab_scene(arm_worldbody)
 
     base_body = next(
         (
@@ -267,7 +470,7 @@ def build_model(package_dir: Path, output: Path) -> None:
     )
     if base_body is None:
         raise ValueError("Expected the RS base_link body at worldbody root")
-    base_body.set("pos", "0 0 0.136")
+    base_body.set("pos", f"{AGV_START[0]} {AGV_START[1]} 0.136")
     base_body.insert(0, element("freejoint", name="agv_freejoint"))
     add_chassis(base_body)
 
@@ -280,7 +483,7 @@ def build_model(package_dir: Path, output: Path) -> None:
                 "motor",
                 name=f"wheel_{wheel_name}_motor",
                 joint=f"wheel_{wheel_name}_joint",
-                ctrlrange="-2 2",
+                ctrlrange="-8 8",
                 gear="1",
             )
         )
@@ -301,6 +504,11 @@ def build_model(package_dir: Path, output: Path) -> None:
         scene_section = scene_root.find(tag)
         if scene_section is not None:
             arm_root.append(deepcopy(scene_section))
+
+    statistic = arm_root.find("statistic")
+    if statistic is not None:
+        statistic.set("center", "0 0 0.3")
+        statistic.set("extent", "5.2")
 
     output.parent.mkdir(parents=True, exist_ok=True)
     ET.indent(arm_tree, space="  ")

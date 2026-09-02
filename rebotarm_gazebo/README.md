@@ -99,6 +99,43 @@ ros2 launch rebotarm_gazebo lab_slam_nav.launch.py gui:=false use_rviz:=false
 
 The static map is published on `/map`, Gazebo simulation time and robot topics are bridged to ROS 2, and `config/semantic_zones.yaml` records the task polygons and approach poses.
 
+## MuJoCo SLAM and navigation
+
+The same laboratory geometry, map coordinates, SLAM Toolbox configuration,
+Nav2 parameters, and RViz layout are available with MuJoCo. MuJoCo publishes
+`/clock`, `/scan`, `/imu`, `/odom`, and the navigation TF tree directly, so no
+Gazebo bridge is started.
+
+```bash
+# MuJoCo laboratory and robot interfaces only
+ros2 launch rebotarm_gazebo mujoco_lab.launch.py
+
+# Online SLAM mapping
+ros2 launch rebotarm_gazebo mujoco_slam.launch.py
+
+# Build a map and navigate at the same time
+ros2 launch rebotarm_gazebo mujoco_slam_nav.launch.py
+
+# AMCL localization and navigation with maps/rebotarm_lab.yaml
+ros2 launch rebotarm_gazebo mujoco_navigation.launch.py
+```
+
+All MuJoCo launches default to physics mode. They accept `use_viewer:=false`
+for headless simulation; launches containing RViz also accept
+`use_rviz:=false`. `mujoco_navigation.launch.py` additionally accepts `map`,
+`params_file`, and `autostart`; `mujoco_slam_nav.launch.py` accepts
+`params_file`, `slam_params_file`, and `autostart`. The default limits are
+`0.80 m/s` forward, `0.50 m/s` reverse, and `1.80 rad/s` yaw. All four launches
+accept `agv_max_linear_velocity`, `agv_max_reverse_velocity`, and
+`agv_max_angular_velocity` overrides.
+
+To drive manually while mapping:
+
+```bash
+ros2 run teleop_twist_keyboard teleop_twist_keyboard
+ros2 run nav2_map_server map_saver_cli -f rebotarm_lab_mujoco
+```
+
 ## Configuration
 
 - `config/nav2_params.yaml` -- All Nav2 node parameters: AMCL localization (initial pose at robot spawn `-2.45, -0.55`), MPPI controller (DiffDrive, `vx_max=0.5`, `wz_max=1.0`), Navfn planner, local/global costmaps with the AGV footprint, recovery behaviors, smoother, and waypoint follower. Also contains a SLAM Toolbox section for `lab_slam_nav`.
@@ -119,10 +156,10 @@ The workcell docking poses assume the current AGV footprint (480 x 500 mm includ
 ## TF tree
 
 ```
-map -> odom -> base_link -> base_scan
-                     \-> imu_link
+map -> odom -> base_footprint -> base_link -> laser
+                                      \-> imu_link
 ```
 
 - `map -> odom`: published by AMCL (`lab_navigation`) or SLAM Toolbox (`lab_slam_nav`)
-- `odom -> base_link`: published by the Gazebo odometry bridge
-- `base_link -> base_scan`, `base_link -> imu_link`: static transforms from `lab_world.launch.py`
+- `odom -> base_footprint -> base_link`: published by Gazebo or the MuJoCo bridge
+- Sensor transforms: published by Gazebo static transforms or the MuJoCo bridge

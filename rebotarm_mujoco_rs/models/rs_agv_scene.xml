@@ -81,43 +81,50 @@
     <material name="agv_body_mat" rgba="0.10 0.11 0.12 1" />
     <material name="agv_adapter_mat" rgba="0.28 0.30 0.32 1" />
     <material name="agv_wheel_mat" rgba="0.015 0.015 0.018 1" />
+    <material name="lab_wall_mat" rgba="0.82 0.84 0.86 1" />
+    <material name="lab_rack_mat" rgba="0.25 0.30 0.36 1" />
+    <material name="lab_pallet_mat" rgba="0.62 0.32 0.10 1" />
+    <material name="lab_charge_mat" rgba="0.04 0.52 0.42 0.32" />
+    <material name="lab_delivery_mat" rgba="0.08 0.42 0.70 0.32" />
+    <material name="lab_dynamic_mat" rgba="0.78 0.56 0.05 0.18" />
+    <material name="lab_lane_mat" rgba="0.96 0.82 0.10 0.8" />
   </asset>
   <worldbody>
-    <light pos="0.365000 -0.15 1.3" dir="0.05 0.1 -1" directional="true" />
-    <camera name="overhead_rgb" mode="fixed" pos="0.455000 0 0.78" xyaxes="1 0 0 0 1 0" fovy="48" />
-    <geom name="floor" type="plane" size="1 1 0.04" material="rs_ground" friction="1.2 0.01 0.001" pos="0 0 0.005" />
-    <body name="task_table" pos="0.495000 0 0.085">
+    <light pos="2.865000 -0.15 1.3" dir="0.05 0.1 -1" directional="true" />
+    <camera name="overhead_rgb" mode="fixed" pos="2.955000 0 0.78" xyaxes="1 0 0 0 1 0" fovy="48" />
+    <geom name="floor" type="plane" size="4.2 3.2 0.04" material="rs_ground" friction="1.2 0.01 0.001" pos="0 0 0" />
+    <body name="task_table" pos="2.995000 0 0.085">
       <geom name="task_table_geom" type="box" size="0.25 0.45 0.015" material="rs_table" friction="1.8 0.02 0.002" solref="0.003 1" solimp="0.98 0.995 0.0005" />
     </body>
-    <geom name="red_zone_n" type="box" pos="0.605000 -0.120 0.1015" size="0.040 0.003 0.001" material="rs_zone_red" contype="0" conaffinity="0" />
-    <geom name="red_zone_s" type="box" pos="0.605000 -0.200 0.1015" size="0.040 0.003 0.001" material="rs_zone_red" contype="0" conaffinity="0" />
-    <geom name="red_zone_e" type="box" pos="0.645000 -0.160 0.1015" size="0.003 0.040 0.001" material="rs_zone_red" contype="0" conaffinity="0" />
-    <geom name="red_zone_w" type="box" pos="0.565000 -0.160 0.1015" size="0.003 0.040 0.001" material="rs_zone_red" contype="0" conaffinity="0" />
-    <geom name="blue_zone_n" type="box" pos="0.605000 0.040 0.1015" size="0.040 0.003 0.001" material="rs_zone_blue" contype="0" conaffinity="0" />
-    <geom name="blue_zone_s" type="box" pos="0.605000 -0.040 0.1015" size="0.040 0.003 0.001" material="rs_zone_blue" contype="0" conaffinity="0" />
-    <geom name="blue_zone_e" type="box" pos="0.645000 0.000 0.1015" size="0.003 0.040 0.001" material="rs_zone_blue" contype="0" conaffinity="0" />
-    <geom name="blue_zone_w" type="box" pos="0.565000 0.000 0.1015" size="0.003 0.040 0.001" material="rs_zone_blue" contype="0" conaffinity="0" />
-    <geom name="yellow_zone_n" type="box" pos="0.605000 0.200 0.1015" size="0.040 0.003 0.001" material="rs_zone_yellow" contype="0" conaffinity="0" />
-    <geom name="yellow_zone_s" type="box" pos="0.605000 0.120 0.1015" size="0.040 0.003 0.001" material="rs_zone_yellow" contype="0" conaffinity="0" />
-    <geom name="yellow_zone_e" type="box" pos="0.645000 0.160 0.1015" size="0.003 0.040 0.001" material="rs_zone_yellow" contype="0" conaffinity="0" />
-    <geom name="yellow_zone_w" type="box" pos="0.565000 0.160 0.1015" size="0.003 0.040 0.001" material="rs_zone_yellow" contype="0" conaffinity="0" />
-    <body name="red_cube" pos="0.355000 -0.30 0.1225">
+    <geom name="red_zone_n" type="box" pos="3.105000 -0.120 0.1015" size="0.040 0.003 0.001" material="rs_zone_red" contype="0" conaffinity="0" />
+    <geom name="red_zone_s" type="box" pos="3.105000 -0.200 0.1015" size="0.040 0.003 0.001" material="rs_zone_red" contype="0" conaffinity="0" />
+    <geom name="red_zone_e" type="box" pos="3.145000 -0.160 0.1015" size="0.003 0.040 0.001" material="rs_zone_red" contype="0" conaffinity="0" />
+    <geom name="red_zone_w" type="box" pos="3.065000 -0.160 0.1015" size="0.003 0.040 0.001" material="rs_zone_red" contype="0" conaffinity="0" />
+    <geom name="blue_zone_n" type="box" pos="3.105000 0.040 0.1015" size="0.040 0.003 0.001" material="rs_zone_blue" contype="0" conaffinity="0" />
+    <geom name="blue_zone_s" type="box" pos="3.105000 -0.040 0.1015" size="0.040 0.003 0.001" material="rs_zone_blue" contype="0" conaffinity="0" />
+    <geom name="blue_zone_e" type="box" pos="3.145000 0.000 0.1015" size="0.003 0.040 0.001" material="rs_zone_blue" contype="0" conaffinity="0" />
+    <geom name="blue_zone_w" type="box" pos="3.065000 0.000 0.1015" size="0.003 0.040 0.001" material="rs_zone_blue" contype="0" conaffinity="0" />
+    <geom name="yellow_zone_n" type="box" pos="3.105000 0.200 0.1015" size="0.040 0.003 0.001" material="rs_zone_yellow" contype="0" conaffinity="0" />
+    <geom name="yellow_zone_s" type="box" pos="3.105000 0.120 0.1015" size="0.040 0.003 0.001" material="rs_zone_yellow" contype="0" conaffinity="0" />
+    <geom name="yellow_zone_e" type="box" pos="3.145000 0.160 0.1015" size="0.003 0.040 0.001" material="rs_zone_yellow" contype="0" conaffinity="0" />
+    <geom name="yellow_zone_w" type="box" pos="3.065000 0.160 0.1015" size="0.003 0.040 0.001" material="rs_zone_yellow" contype="0" conaffinity="0" />
+    <body name="red_cube" pos="2.855000 -0.30 0.1225">
       <freejoint name="red_cube_freejoint" />
       <geom name="red_cube_geom" type="box" size="0.0225 0.0225 0.0225" material="rs_red" mass="0.045" friction="3.5 0.08 0.01" solref="0.002 1" solimp="0.99 0.995 0.0005" />
     </body>
-    <body name="blue_block" pos="0.455000 0.06 0.119">
+    <body name="blue_block" pos="2.955000 0.06 0.119">
       <freejoint name="blue_block_freejoint" />
       <geom name="blue_block_geom" type="box" size="0.026 0.016 0.019" material="rs_blue" mass="0.050" friction="3.5 0.08 0.01" solref="0.002 1" solimp="0.99 0.995 0.0005" />
     </body>
-    <body name="yellow_cylinder" pos="0.445000 -0.20 0.126">
+    <body name="yellow_cylinder" pos="2.945000 -0.20 0.126">
       <freejoint name="yellow_cylinder_freejoint" />
       <geom name="yellow_cylinder_geom" type="cylinder" size="0.020 0.026" material="rs_yellow" mass="0.042" friction="3.5 0.08 0.01" solref="0.002 1" solimp="0.99 0.995 0.0005" />
     </body>
-    <body name="ik_target" mocap="true" pos="0.455000 0 0.20">
+    <body name="ik_target" mocap="true" pos="2.955000 0 0.20">
       <geom name="ik_target_sphere" type="sphere" size="0.025" material="target_mat" contype="0" conaffinity="0" />
       <site name="ik_target_site" pos="0 0 0" size="0.035" rgba="1 0.55 0.12 0" />
     </body>
-    <body name="base_link" pos="0 0 0.136">
+    <body name="base_link" pos="-2.45 -0.55 0.136">
       <freejoint name="agv_freejoint" />
       <inertial pos="0.0000029 -0.0001223 0.0243376" mass="1.1774" fullinertia="0.0013304 0.00213119 0.00275877 0.00000001 0 0" />
       <geom pos="0 0 0" group="1" contype="0" conaffinity="0" material="rs_base_black_mat" type="mesh" mesh="base_link" />
@@ -133,6 +140,9 @@
         <geom name="agv_chassis_collision" type="box" size="0.240 0.210 0.055" pos="0 0 0.065" group="3" rgba="0 0 0 0" friction="1.0 0.02 0.002" />
         <body name="laser" pos="0.185 0 0.150">
           <geom name="laser_visual" type="cylinder" size="0.030 0.025" material="agv_adapter_mat" group="1" contype="0" conaffinity="0" />
+        </body>
+        <body name="imu" pos="0 0 0.090">
+          <site name="imu_site" type="box" size="0.012 0.009 0.004" rgba="0.15 0.65 0.95 0.8" group="2" />
         </body>
         <body name="wheel_front_left" pos="0.150 0.230 0.055">
           <joint name="wheel_front_left_joint" type="hinge" axis="0 1 0" damping="0.04" />
@@ -257,10 +267,286 @@
         </body>
       </body>
     </body>
-    <geom name="north_wall" type="box" pos="0.000 1.000 0.255" size="0.985 0.015 0.250" material="rs_table" />
-    <geom name="south_wall" type="box" pos="0.000 -1.000 0.255" size="0.985 0.015 0.250" material="rs_table" />
-    <geom name="east_wall" type="box" pos="1.000 0.000 0.255" size="0.015 0.985 0.250" material="rs_table" />
-    <geom name="west_wall" type="box" pos="-1.000 0.000 0.255" size="0.015 0.985 0.250" material="rs_table" />
+    <geom name="west_boundary" type="box" pos="-4.000 0.000 0.240" size="0.075 3.075 0.240" material="lab_wall_mat" />
+    <geom name="east_boundary" type="box" pos="4.000 0.000 0.240" size="0.075 3.075 0.240" material="lab_wall_mat" />
+    <geom name="south_boundary" type="box" pos="0.000 -3.000 0.240" size="4.075 0.075 0.240" material="lab_wall_mat" />
+    <geom name="north_boundary" type="box" pos="0.000 3.000 0.240" size="4.075 0.075 0.240" material="lab_wall_mat" />
+    <geom name="storage_partition" type="box" pos="-1.300 1.800 0.240" size="0.060 0.900 0.240" material="lab_wall_mat" />
+    <geom name="north_partition" type="box" pos="0.700 1.000 0.240" size="1.000 0.060 0.240" material="lab_wall_mat" />
+    <geom name="south_partition" type="box" pos="-0.800 -1.600 0.240" size="1.200 0.060 0.240" material="lab_wall_mat" />
+    <geom name="delivery_partition" type="box" pos="1.400 -1.800 0.240" size="0.060 0.900 0.240" material="lab_wall_mat" />
+    <geom name="storage_rack" type="box" pos="-3.000 1.750 0.550" size="0.600 0.550 0.550" material="lab_rack_mat" />
+    <body name="dynamic_pallet" pos="0 1.72 0.20">
+      <freejoint name="dynamic_pallet_freejoint" />
+      <geom name="dynamic_pallet_geom" type="box" size="0.350 0.225 0.200" material="lab_pallet_mat" mass="12" friction="1.2 0.02 0.002" />
+    </body>
+    <site name="charging_zone" type="box" pos="-3.050 -2.100 0.0002" size="0.700 0.550 0.00005" rgba="0.04 0.52 0.42 0.38" group="1" />
+    <site name="charging_zone_text_0_0_1" type="box" pos="-3.485000 -2.010000 0.00045" size="0.050400 0.012600 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="charging_zone_text_0_1_0" type="box" pos="-3.560000 -2.040000 0.00045" size="0.012600 0.012600 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="charging_zone_text_0_2_0" type="box" pos="-3.560000 -2.070000 0.00045" size="0.012600 0.012600 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="charging_zone_text_0_3_0" type="box" pos="-3.560000 -2.100000 0.00045" size="0.012600 0.012600 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="charging_zone_text_0_4_0" type="box" pos="-3.560000 -2.130000 0.00045" size="0.012600 0.012600 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="charging_zone_text_0_5_0" type="box" pos="-3.560000 -2.160000 0.00045" size="0.012600 0.012600 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="charging_zone_text_0_6_1" type="box" pos="-3.485000 -2.190000 0.00045" size="0.050400 0.012600 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="charging_zone_text_1_0_0" type="box" pos="-3.380000 -2.010000 0.00045" size="0.012600 0.012600 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="charging_zone_text_1_0_4" type="box" pos="-3.260000 -2.010000 0.00045" size="0.012600 0.012600 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="charging_zone_text_1_1_0" type="box" pos="-3.380000 -2.040000 0.00045" size="0.012600 0.012600 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="charging_zone_text_1_1_4" type="box" pos="-3.260000 -2.040000 0.00045" size="0.012600 0.012600 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="charging_zone_text_1_2_0" type="box" pos="-3.380000 -2.070000 0.00045" size="0.012600 0.012600 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="charging_zone_text_1_2_4" type="box" pos="-3.260000 -2.070000 0.00045" size="0.012600 0.012600 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="charging_zone_text_1_3_0" type="box" pos="-3.320000 -2.100000 0.00045" size="0.063000 0.012600 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="charging_zone_text_1_4_0" type="box" pos="-3.380000 -2.130000 0.00045" size="0.012600 0.012600 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="charging_zone_text_1_4_4" type="box" pos="-3.260000 -2.130000 0.00045" size="0.012600 0.012600 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="charging_zone_text_1_5_0" type="box" pos="-3.380000 -2.160000 0.00045" size="0.012600 0.012600 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="charging_zone_text_1_5_4" type="box" pos="-3.260000 -2.160000 0.00045" size="0.012600 0.012600 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="charging_zone_text_1_6_0" type="box" pos="-3.380000 -2.190000 0.00045" size="0.012600 0.012600 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="charging_zone_text_1_6_4" type="box" pos="-3.260000 -2.190000 0.00045" size="0.012600 0.012600 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="charging_zone_text_2_0_1" type="box" pos="-3.140000 -2.010000 0.00045" size="0.037800 0.012600 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="charging_zone_text_2_1_0" type="box" pos="-3.200000 -2.040000 0.00045" size="0.012600 0.012600 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="charging_zone_text_2_1_4" type="box" pos="-3.080000 -2.040000 0.00045" size="0.012600 0.012600 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="charging_zone_text_2_2_0" type="box" pos="-3.200000 -2.070000 0.00045" size="0.012600 0.012600 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="charging_zone_text_2_2_4" type="box" pos="-3.080000 -2.070000 0.00045" size="0.012600 0.012600 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="charging_zone_text_2_3_0" type="box" pos="-3.140000 -2.100000 0.00045" size="0.063000 0.012600 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="charging_zone_text_2_4_0" type="box" pos="-3.200000 -2.130000 0.00045" size="0.012600 0.012600 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="charging_zone_text_2_4_4" type="box" pos="-3.080000 -2.130000 0.00045" size="0.012600 0.012600 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="charging_zone_text_2_5_0" type="box" pos="-3.200000 -2.160000 0.00045" size="0.012600 0.012600 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="charging_zone_text_2_5_4" type="box" pos="-3.080000 -2.160000 0.00045" size="0.012600 0.012600 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="charging_zone_text_2_6_0" type="box" pos="-3.200000 -2.190000 0.00045" size="0.012600 0.012600 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="charging_zone_text_2_6_4" type="box" pos="-3.080000 -2.190000 0.00045" size="0.012600 0.012600 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="charging_zone_text_3_0_0" type="box" pos="-2.975000 -2.010000 0.00045" size="0.050400 0.012600 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="charging_zone_text_3_1_0" type="box" pos="-3.020000 -2.040000 0.00045" size="0.012600 0.012600 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="charging_zone_text_3_1_4" type="box" pos="-2.900000 -2.040000 0.00045" size="0.012600 0.012600 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="charging_zone_text_3_2_0" type="box" pos="-3.020000 -2.070000 0.00045" size="0.012600 0.012600 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="charging_zone_text_3_2_4" type="box" pos="-2.900000 -2.070000 0.00045" size="0.012600 0.012600 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="charging_zone_text_3_3_0" type="box" pos="-2.975000 -2.100000 0.00045" size="0.050400 0.012600 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="charging_zone_text_3_4_0" type="box" pos="-3.020000 -2.130000 0.00045" size="0.012600 0.012600 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="charging_zone_text_3_4_2" type="box" pos="-2.960000 -2.130000 0.00045" size="0.012600 0.012600 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="charging_zone_text_3_5_0" type="box" pos="-3.020000 -2.160000 0.00045" size="0.012600 0.012600 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="charging_zone_text_3_5_3" type="box" pos="-2.930000 -2.160000 0.00045" size="0.012600 0.012600 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="charging_zone_text_3_6_0" type="box" pos="-3.020000 -2.190000 0.00045" size="0.012600 0.012600 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="charging_zone_text_3_6_4" type="box" pos="-2.900000 -2.190000 0.00045" size="0.012600 0.012600 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="charging_zone_text_4_0_1" type="box" pos="-2.765000 -2.010000 0.00045" size="0.050400 0.012600 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="charging_zone_text_4_1_0" type="box" pos="-2.840000 -2.040000 0.00045" size="0.012600 0.012600 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="charging_zone_text_4_2_0" type="box" pos="-2.840000 -2.070000 0.00045" size="0.012600 0.012600 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="charging_zone_text_4_3_0" type="box" pos="-2.840000 -2.100000 0.00045" size="0.012600 0.012600 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="charging_zone_text_4_3_2" type="box" pos="-2.750000 -2.100000 0.00045" size="0.037800 0.012600 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="charging_zone_text_4_4_0" type="box" pos="-2.840000 -2.130000 0.00045" size="0.012600 0.012600 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="charging_zone_text_4_4_4" type="box" pos="-2.720000 -2.130000 0.00045" size="0.012600 0.012600 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="charging_zone_text_4_5_0" type="box" pos="-2.840000 -2.160000 0.00045" size="0.012600 0.012600 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="charging_zone_text_4_5_4" type="box" pos="-2.720000 -2.160000 0.00045" size="0.012600 0.012600 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="charging_zone_text_4_6_1" type="box" pos="-2.765000 -2.190000 0.00045" size="0.050400 0.012600 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="charging_zone_text_5_0_0" type="box" pos="-2.600000 -2.010000 0.00045" size="0.063000 0.012600 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="charging_zone_text_5_1_0" type="box" pos="-2.660000 -2.040000 0.00045" size="0.012600 0.012600 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="charging_zone_text_5_2_0" type="box" pos="-2.660000 -2.070000 0.00045" size="0.012600 0.012600 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="charging_zone_text_5_3_0" type="box" pos="-2.615000 -2.100000 0.00045" size="0.050400 0.012600 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="charging_zone_text_5_4_0" type="box" pos="-2.660000 -2.130000 0.00045" size="0.012600 0.012600 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="charging_zone_text_5_5_0" type="box" pos="-2.660000 -2.160000 0.00045" size="0.012600 0.012600 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="charging_zone_text_5_6_0" type="box" pos="-2.600000 -2.190000 0.00045" size="0.063000 0.012600 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone" type="box" pos="3.050 -2.100 0.0002" size="0.700 0.550 0.00005" rgba="0.08 0.42 0.70 0.38" group="1" />
+    <site name="delivery_zone_text_0_0_0" type="box" pos="2.537660 -2.028511 0.00045" size="0.040034 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_0_1_0" type="box" pos="2.501915 -2.052340 0.00045" size="0.010009 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_0_1_4" type="box" pos="2.597234 -2.052340 0.00045" size="0.010009 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_0_2_0" type="box" pos="2.501915 -2.076170 0.00045" size="0.010009 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_0_2_4" type="box" pos="2.597234 -2.076170 0.00045" size="0.010009 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_0_3_0" type="box" pos="2.501915 -2.100000 0.00045" size="0.010009 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_0_3_4" type="box" pos="2.597234 -2.100000 0.00045" size="0.010009 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_0_4_0" type="box" pos="2.501915 -2.123830 0.00045" size="0.010009 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_0_4_4" type="box" pos="2.597234 -2.123830 0.00045" size="0.010009 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_0_5_0" type="box" pos="2.501915 -2.147660 0.00045" size="0.010009 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_0_5_4" type="box" pos="2.597234 -2.147660 0.00045" size="0.010009 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_0_6_0" type="box" pos="2.537660 -2.171489 0.00045" size="0.040034 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_1_0_0" type="box" pos="2.692553 -2.028511 0.00045" size="0.050043 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_1_1_0" type="box" pos="2.644894 -2.052340 0.00045" size="0.010009 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_1_2_0" type="box" pos="2.644894 -2.076170 0.00045" size="0.010009 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_1_3_0" type="box" pos="2.680638 -2.100000 0.00045" size="0.040034 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_1_4_0" type="box" pos="2.644894 -2.123830 0.00045" size="0.010009 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_1_5_0" type="box" pos="2.644894 -2.147660 0.00045" size="0.010009 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_1_6_0" type="box" pos="2.692553 -2.171489 0.00045" size="0.050043 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_2_0_0" type="box" pos="2.787872 -2.028511 0.00045" size="0.010009 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_2_1_0" type="box" pos="2.787872 -2.052340 0.00045" size="0.010009 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_2_2_0" type="box" pos="2.787872 -2.076170 0.00045" size="0.010009 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_2_3_0" type="box" pos="2.787872 -2.100000 0.00045" size="0.010009 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_2_4_0" type="box" pos="2.787872 -2.123830 0.00045" size="0.010009 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_2_5_0" type="box" pos="2.787872 -2.147660 0.00045" size="0.010009 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_2_6_0" type="box" pos="2.835532 -2.171489 0.00045" size="0.050043 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_3_0_0" type="box" pos="2.978511 -2.028511 0.00045" size="0.050043 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_3_1_2" type="box" pos="2.978511 -2.052340 0.00045" size="0.010009 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_3_2_2" type="box" pos="2.978511 -2.076170 0.00045" size="0.010009 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_3_3_2" type="box" pos="2.978511 -2.100000 0.00045" size="0.010009 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_3_4_2" type="box" pos="2.978511 -2.123830 0.00045" size="0.010009 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_3_5_2" type="box" pos="2.978511 -2.147660 0.00045" size="0.010009 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_3_6_0" type="box" pos="2.978511 -2.171489 0.00045" size="0.050043 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_4_0_0" type="box" pos="3.073830 -2.028511 0.00045" size="0.010009 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_4_0_4" type="box" pos="3.169149 -2.028511 0.00045" size="0.010009 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_4_1_0" type="box" pos="3.073830 -2.052340 0.00045" size="0.010009 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_4_1_4" type="box" pos="3.169149 -2.052340 0.00045" size="0.010009 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_4_2_0" type="box" pos="3.073830 -2.076170 0.00045" size="0.010009 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_4_2_4" type="box" pos="3.169149 -2.076170 0.00045" size="0.010009 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_4_3_0" type="box" pos="3.073830 -2.100000 0.00045" size="0.010009 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_4_3_4" type="box" pos="3.169149 -2.100000 0.00045" size="0.010009 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_4_4_0" type="box" pos="3.073830 -2.123830 0.00045" size="0.010009 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_4_4_4" type="box" pos="3.169149 -2.123830 0.00045" size="0.010009 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_4_5_1" type="box" pos="3.097660 -2.147660 0.00045" size="0.010009 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_4_5_3" type="box" pos="3.145319 -2.147660 0.00045" size="0.010009 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_4_6_2" type="box" pos="3.121489 -2.171489 0.00045" size="0.010009 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_5_0_0" type="box" pos="3.264468 -2.028511 0.00045" size="0.050043 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_5_1_0" type="box" pos="3.216809 -2.052340 0.00045" size="0.010009 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_5_2_0" type="box" pos="3.216809 -2.076170 0.00045" size="0.010009 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_5_3_0" type="box" pos="3.252553 -2.100000 0.00045" size="0.040034 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_5_4_0" type="box" pos="3.216809 -2.123830 0.00045" size="0.010009 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_5_5_0" type="box" pos="3.216809 -2.147660 0.00045" size="0.010009 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_5_6_0" type="box" pos="3.264468 -2.171489 0.00045" size="0.050043 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_6_0_0" type="box" pos="3.395532 -2.028511 0.00045" size="0.040034 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_6_1_0" type="box" pos="3.359787 -2.052340 0.00045" size="0.010009 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_6_1_4" type="box" pos="3.455106 -2.052340 0.00045" size="0.010009 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_6_2_0" type="box" pos="3.359787 -2.076170 0.00045" size="0.010009 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_6_2_4" type="box" pos="3.455106 -2.076170 0.00045" size="0.010009 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_6_3_0" type="box" pos="3.395532 -2.100000 0.00045" size="0.040034 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_6_4_0" type="box" pos="3.359787 -2.123830 0.00045" size="0.010009 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_6_4_2" type="box" pos="3.407447 -2.123830 0.00045" size="0.010009 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_6_5_0" type="box" pos="3.359787 -2.147660 0.00045" size="0.010009 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_6_5_3" type="box" pos="3.431277 -2.147660 0.00045" size="0.010009 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_6_6_0" type="box" pos="3.359787 -2.171489 0.00045" size="0.010009 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_6_6_4" type="box" pos="3.455106 -2.171489 0.00045" size="0.010009 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_7_0_0" type="box" pos="3.502766 -2.028511 0.00045" size="0.010009 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_7_0_4" type="box" pos="3.598085 -2.028511 0.00045" size="0.010009 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_7_1_0" type="box" pos="3.502766 -2.052340 0.00045" size="0.010009 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_7_1_4" type="box" pos="3.598085 -2.052340 0.00045" size="0.010009 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_7_2_1" type="box" pos="3.526596 -2.076170 0.00045" size="0.010009 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_7_2_3" type="box" pos="3.574255 -2.076170 0.00045" size="0.010009 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_7_3_2" type="box" pos="3.550426 -2.100000 0.00045" size="0.010009 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_7_4_2" type="box" pos="3.550426 -2.123830 0.00045" size="0.010009 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_7_5_2" type="box" pos="3.550426 -2.147660 0.00045" size="0.010009 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="delivery_zone_text_7_6_2" type="box" pos="3.550426 -2.171489 0.00045" size="0.010009 0.010009 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone" type="box" pos="0.000 1.730 0.0002" size="0.750 0.625 0.00005" rgba="0.78 0.56 0.05 0.30" group="1" />
+    <site name="dynamic_zone_text_0_0_0" type="box" pos="-0.541463 1.817805 0.00045" size="0.049171 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_0_1_0" type="box" pos="-0.585366 1.788537 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_0_1_4" type="box" pos="-0.468293 1.788537 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_0_2_0" type="box" pos="-0.585366 1.759268 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_0_2_4" type="box" pos="-0.468293 1.759268 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_0_3_0" type="box" pos="-0.585366 1.730000 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_0_3_4" type="box" pos="-0.468293 1.730000 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_0_4_0" type="box" pos="-0.585366 1.700732 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_0_4_4" type="box" pos="-0.468293 1.700732 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_0_5_0" type="box" pos="-0.585366 1.671463 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_0_5_4" type="box" pos="-0.468293 1.671463 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_0_6_0" type="box" pos="-0.541463 1.642195 0.00045" size="0.049171 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_1_0_0" type="box" pos="-0.409756 1.817805 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_1_0_4" type="box" pos="-0.292683 1.817805 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_1_1_0" type="box" pos="-0.409756 1.788537 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_1_1_4" type="box" pos="-0.292683 1.788537 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_1_2_1" type="box" pos="-0.380488 1.759268 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_1_2_3" type="box" pos="-0.321951 1.759268 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_1_3_2" type="box" pos="-0.351220 1.730000 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_1_4_2" type="box" pos="-0.351220 1.700732 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_1_5_2" type="box" pos="-0.351220 1.671463 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_1_6_2" type="box" pos="-0.351220 1.642195 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_2_0_0" type="box" pos="-0.234146 1.817805 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_2_0_4" type="box" pos="-0.117073 1.817805 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_2_1_0" type="box" pos="-0.219512 1.788537 0.00045" size="0.024585 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_2_1_4" type="box" pos="-0.117073 1.788537 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_2_2_0" type="box" pos="-0.234146 1.759268 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_2_2_2" type="box" pos="-0.175610 1.759268 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_2_2_4" type="box" pos="-0.117073 1.759268 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_2_3_0" type="box" pos="-0.234146 1.730000 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_2_3_3" type="box" pos="-0.131707 1.730000 0.00045" size="0.024585 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_2_4_0" type="box" pos="-0.234146 1.700732 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_2_4_4" type="box" pos="-0.117073 1.700732 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_2_5_0" type="box" pos="-0.234146 1.671463 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_2_5_4" type="box" pos="-0.117073 1.671463 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_2_6_0" type="box" pos="-0.234146 1.642195 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_2_6_4" type="box" pos="-0.117073 1.642195 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_3_0_1" type="box" pos="0.000000 1.817805 0.00045" size="0.036878 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_3_1_0" type="box" pos="-0.058537 1.788537 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_3_1_4" type="box" pos="0.058537 1.788537 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_3_2_0" type="box" pos="-0.058537 1.759268 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_3_2_4" type="box" pos="0.058537 1.759268 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_3_3_0" type="box" pos="0.000000 1.730000 0.00045" size="0.061463 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_3_4_0" type="box" pos="-0.058537 1.700732 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_3_4_4" type="box" pos="0.058537 1.700732 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_3_5_0" type="box" pos="-0.058537 1.671463 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_3_5_4" type="box" pos="0.058537 1.671463 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_3_6_0" type="box" pos="-0.058537 1.642195 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_3_6_4" type="box" pos="0.058537 1.642195 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_4_0_0" type="box" pos="0.117073 1.817805 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_4_0_4" type="box" pos="0.234146 1.817805 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_4_1_0" type="box" pos="0.131707 1.788537 0.00045" size="0.024585 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_4_1_3" type="box" pos="0.219512 1.788537 0.00045" size="0.024585 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_4_2_0" type="box" pos="0.117073 1.759268 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_4_2_2" type="box" pos="0.175610 1.759268 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_4_2_4" type="box" pos="0.234146 1.759268 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_4_3_0" type="box" pos="0.117073 1.730000 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_4_3_2" type="box" pos="0.175610 1.730000 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_4_3_4" type="box" pos="0.234146 1.730000 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_4_4_0" type="box" pos="0.117073 1.700732 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_4_4_4" type="box" pos="0.234146 1.700732 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_4_5_0" type="box" pos="0.117073 1.671463 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_4_5_4" type="box" pos="0.234146 1.671463 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_4_6_0" type="box" pos="0.117073 1.642195 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_4_6_4" type="box" pos="0.234146 1.642195 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_5_0_0" type="box" pos="0.351220 1.817805 0.00045" size="0.061463 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_5_1_2" type="box" pos="0.351220 1.788537 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_5_2_2" type="box" pos="0.351220 1.759268 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_5_3_2" type="box" pos="0.351220 1.730000 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_5_4_2" type="box" pos="0.351220 1.700732 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_5_5_2" type="box" pos="0.351220 1.671463 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_5_6_0" type="box" pos="0.351220 1.642195 0.00045" size="0.061463 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_6_0_1" type="box" pos="0.541463 1.817805 0.00045" size="0.049171 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_6_1_0" type="box" pos="0.468293 1.788537 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_6_2_0" type="box" pos="0.468293 1.759268 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_6_3_0" type="box" pos="0.468293 1.730000 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_6_4_0" type="box" pos="0.468293 1.700732 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_6_5_0" type="box" pos="0.468293 1.671463 0.00045" size="0.012293 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="dynamic_zone_text_6_6_1" type="box" pos="0.541463 1.642195 0.00045" size="0.049171 0.012293 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="workcell_dock" type="box" pos="2.500 0.000 0.0002" size="0.240 0.250 0.00005" rgba="0.08 0.42 0.70 0.45" group="1" />
+    <site name="workcell_dock_text_0_0_0" type="box" pos="2.341391 0.050087 0.00045" size="0.028049 0.007012 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="workcell_dock_text_0_1_0" type="box" pos="2.316348 0.033391 0.00045" size="0.007012 0.007012 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="workcell_dock_text_0_1_4" type="box" pos="2.383130 0.033391 0.00045" size="0.007012 0.007012 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="workcell_dock_text_0_2_0" type="box" pos="2.316348 0.016696 0.00045" size="0.007012 0.007012 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="workcell_dock_text_0_2_4" type="box" pos="2.383130 0.016696 0.00045" size="0.007012 0.007012 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="workcell_dock_text_0_3_0" type="box" pos="2.316348 0.000000 0.00045" size="0.007012 0.007012 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="workcell_dock_text_0_3_4" type="box" pos="2.383130 0.000000 0.00045" size="0.007012 0.007012 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="workcell_dock_text_0_4_0" type="box" pos="2.316348 -0.016696 0.00045" size="0.007012 0.007012 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="workcell_dock_text_0_4_4" type="box" pos="2.383130 -0.016696 0.00045" size="0.007012 0.007012 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="workcell_dock_text_0_5_0" type="box" pos="2.316348 -0.033391 0.00045" size="0.007012 0.007012 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="workcell_dock_text_0_5_4" type="box" pos="2.383130 -0.033391 0.00045" size="0.007012 0.007012 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="workcell_dock_text_0_6_0" type="box" pos="2.341391 -0.050087 0.00045" size="0.028049 0.007012 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="workcell_dock_text_1_0_1" type="box" pos="2.449913 0.050087 0.00045" size="0.021037 0.007012 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="workcell_dock_text_1_1_0" type="box" pos="2.416522 0.033391 0.00045" size="0.007012 0.007012 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="workcell_dock_text_1_1_4" type="box" pos="2.483304 0.033391 0.00045" size="0.007012 0.007012 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="workcell_dock_text_1_2_0" type="box" pos="2.416522 0.016696 0.00045" size="0.007012 0.007012 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="workcell_dock_text_1_2_4" type="box" pos="2.483304 0.016696 0.00045" size="0.007012 0.007012 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="workcell_dock_text_1_3_0" type="box" pos="2.416522 0.000000 0.00045" size="0.007012 0.007012 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="workcell_dock_text_1_3_4" type="box" pos="2.483304 0.000000 0.00045" size="0.007012 0.007012 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="workcell_dock_text_1_4_0" type="box" pos="2.416522 -0.016696 0.00045" size="0.007012 0.007012 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="workcell_dock_text_1_4_4" type="box" pos="2.483304 -0.016696 0.00045" size="0.007012 0.007012 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="workcell_dock_text_1_5_0" type="box" pos="2.416522 -0.033391 0.00045" size="0.007012 0.007012 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="workcell_dock_text_1_5_4" type="box" pos="2.483304 -0.033391 0.00045" size="0.007012 0.007012 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="workcell_dock_text_1_6_1" type="box" pos="2.449913 -0.050087 0.00045" size="0.021037 0.007012 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="workcell_dock_text_2_0_1" type="box" pos="2.558435 0.050087 0.00045" size="0.028049 0.007012 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="workcell_dock_text_2_1_0" type="box" pos="2.516696 0.033391 0.00045" size="0.007012 0.007012 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="workcell_dock_text_2_2_0" type="box" pos="2.516696 0.016696 0.00045" size="0.007012 0.007012 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="workcell_dock_text_2_3_0" type="box" pos="2.516696 0.000000 0.00045" size="0.007012 0.007012 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="workcell_dock_text_2_4_0" type="box" pos="2.516696 -0.016696 0.00045" size="0.007012 0.007012 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="workcell_dock_text_2_5_0" type="box" pos="2.516696 -0.033391 0.00045" size="0.007012 0.007012 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="workcell_dock_text_2_6_1" type="box" pos="2.558435 -0.050087 0.00045" size="0.028049 0.007012 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="workcell_dock_text_3_0_0" type="box" pos="2.616870 0.050087 0.00045" size="0.007012 0.007012 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="workcell_dock_text_3_0_4" type="box" pos="2.683652 0.050087 0.00045" size="0.007012 0.007012 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="workcell_dock_text_3_1_0" type="box" pos="2.616870 0.033391 0.00045" size="0.007012 0.007012 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="workcell_dock_text_3_1_3" type="box" pos="2.666957 0.033391 0.00045" size="0.007012 0.007012 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="workcell_dock_text_3_2_0" type="box" pos="2.616870 0.016696 0.00045" size="0.007012 0.007012 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="workcell_dock_text_3_2_2" type="box" pos="2.650261 0.016696 0.00045" size="0.007012 0.007012 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="workcell_dock_text_3_3_0" type="box" pos="2.625217 0.000000 0.00045" size="0.014024 0.007012 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="workcell_dock_text_3_4_0" type="box" pos="2.616870 -0.016696 0.00045" size="0.007012 0.007012 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="workcell_dock_text_3_4_2" type="box" pos="2.650261 -0.016696 0.00045" size="0.007012 0.007012 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="workcell_dock_text_3_5_0" type="box" pos="2.616870 -0.033391 0.00045" size="0.007012 0.007012 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="workcell_dock_text_3_5_3" type="box" pos="2.666957 -0.033391 0.00045" size="0.007012 0.007012 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="workcell_dock_text_3_6_0" type="box" pos="2.616870 -0.050087 0.00045" size="0.007012 0.007012 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="workcell_dock_text_3_6_4" type="box" pos="2.683652 -0.050087 0.00045" size="0.007012 0.007012 0.00005" rgba="0.96 0.97 0.98 0.95" group="1" />
+    <site name="lane_left" type="box" pos="0 -0.62 0.0002" size="3.60 0.0125 0.00005" rgba="0.96 0.82 0.10 0.8" group="1" />
+    <site name="lane_right" type="box" pos="0 0.62 0.0002" size="3.60 0.0125 0.00005" rgba="0.96 0.82 0.10 0.8" group="1" />
+    <light name="lab_sun" pos="0 0 8" dir="-0.45 0.2 -0.87" directional="true" />
+    <camera name="lab_overview" mode="fixed" pos="0 -7.5 7.0" xyaxes="1 0 0 0 0.682 0.731" fovy="55" />
   </worldbody>
   <equality>
     <!-- joint7 与左右夹爪直线位移 1:1 联动。
@@ -304,13 +590,13 @@
          这里给 joint7 加 <motor>，由 Python 中的 PD 控制器驱动。
          注意：若用于 real-to-sim，此作动器应禁用，改由真实电机位置直接驱动。 -->
     <motor name="joint7_motor" joint="joint7" ctrlrange="-500 500" gear="1" />
-    <motor name="wheel_front_left_motor" joint="wheel_front_left_joint" ctrlrange="-2 2" gear="1" />
-    <motor name="wheel_front_right_motor" joint="wheel_front_right_joint" ctrlrange="-2 2" gear="1" />
-    <motor name="wheel_rear_left_motor" joint="wheel_rear_left_joint" ctrlrange="-2 2" gear="1" />
-    <motor name="wheel_rear_right_motor" joint="wheel_rear_right_joint" ctrlrange="-2 2" gear="1" />
+    <motor name="wheel_front_left_motor" joint="wheel_front_left_joint" ctrlrange="-8 8" gear="1" />
+    <motor name="wheel_front_right_motor" joint="wheel_front_right_joint" ctrlrange="-8 8" gear="1" />
+    <motor name="wheel_rear_left_motor" joint="wheel_rear_left_joint" ctrlrange="-8 8" gear="1" />
+    <motor name="wheel_rear_right_motor" joint="wheel_rear_right_joint" ctrlrange="-8 8" gear="1" />
   </actuator>
   <option timestep="0.001" iterations="100" solver="Newton" integrator="Euler" />
-  <statistic center="0.25 0 0.18" extent="0.62" />
+  <statistic center="0 0 0.3" extent="5.2" />
   <visual>
     <headlight diffuse="0.68 0.68 0.68" ambient="0.35 0.35 0.35" specular="0.1 0.1 0.1" />
     <rgba haze="0.15 0.22 0.30 1" />

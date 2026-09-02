@@ -43,18 +43,27 @@ Modes:
 - `physics`: tracks ROS targets with conservative PD plus MuJoCo bias forces.
 
 Both modes accept differential-drive commands on `/cmd_vel` by default. The
-kinematic mode integrates the chassis pose directly; the physics mode drives the
-four wheel actuators with a velocity PD controller. The synchronized base pose
+kinematic mode integrates the chassis pose directly. Physics mode defaults to
+Gazebo-like planar velocity tracking for repeatable navigation; set
+`agv_drive_mode:=wheel` to use four-wheel traction and slip instead. The synchronized base pose
 is published on `<namespace>/mujoco/base_pose` and consumed by the scene camera
 and task server. Set `cmd_vel_topic:=/<namespace>/cmd_vel` at launch time if a
-namespaced velocity input is required.
+namespaced velocity input is required. The default limits are `0.80 m/s`
+forward, `0.50 m/s` reverse, and `1.80 rad/s` yaw; override them with
+`agv_max_linear_velocity`, `agv_max_reverse_velocity`, and
+`agv_max_angular_velocity` when needed.
 
 The combined scene also provides the standard ground-robot interfaces used by
-SLAM Toolbox and Nav2. A front 2D lidar placeholder is mounted at
-`x=0.185 m, z=0.150 m` in the `laser` frame, and a 2 m x 2 m perimeter wall
-makes the simulated scan observable. The bridge publishes perfect odometry and
-TF from MuJoCo, and computes `/scan` with MuJoCo ray casting. These topic and
-frame conventions follow the
+SLAM Toolbox and Nav2. It reproduces the Gazebo package's 8 x 6 m laboratory,
+including boundary walls, interior partitions, workcell, storage rack, task
+zones, and a movable pallet. The robot starts at `(-2.45, -0.55)`, matching the
+pre-built map and AMCL configuration.
+
+A front 2D lidar is mounted at `x=0.185 m, z=0.150 m` in the `laser` frame, and
+an IMU is mounted in the `imu_link` frame. The bridge publishes simulation
+clock, odometry, IMU, TF, and ray-cast laser scans. Optional range noise can be
+enabled with `laser_range_noise_stddev`; its random sequence is reproducible
+through `sensor_noise_seed`. These topic and frame conventions follow the
 [linorobot2](https://github.com/linorobot/linorobot2) reference project; no
 linorobot2 source is included.
 
@@ -63,11 +72,33 @@ ros2 launch rebotarm_mujoco_rs mujoco_rs.launch.py \
   arm_namespace:=rebotarm_rs simulation_mode:=physics use_viewer:=true
 ```
 
+For mapping and navigation, use the launch files in `rebotarm_gazebo`, which
+share the same map and Nav2 parameters with Gazebo:
+
+```bash
+# Online mapping
+ros2 launch rebotarm_gazebo mujoco_slam.launch.py
+
+# Online mapping and navigation together
+ros2 launch rebotarm_gazebo mujoco_slam_nav.launch.py
+
+# Localization and navigation on the checked-in map
+ros2 launch rebotarm_gazebo mujoco_navigation.launch.py
+```
+
+Add `use_viewer:=false use_rviz:=false` for a headless run. The MuJoCo bridge
+must keep wall time internally because it is the `/clock` source; all other ROS
+nodes use simulation time. Viewer rendering is synchronized at 30 FPS by
+default, independently of the 250 Hz physics update; override it with
+`viewer_sync_rate` if needed.
+
 Important topics:
 
 - `/cmd_vel`
+- `/clock`
 - `/odom`
 - `/scan`
+- `/imu`
 - `/tf`
 - `/rebotarm_rs/mujoco/base_pose`
 - `/rebotarm_rs/mujoco/object_states`

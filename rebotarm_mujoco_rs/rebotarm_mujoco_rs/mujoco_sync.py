@@ -12,12 +12,14 @@ from ament_index_python.packages import (
     get_package_share_directory,
 )
 import rclpy
+from builtin_interfaces.msg import Time as TimeMsg
 from geometry_msgs.msg import PoseStamped, TransformStamped, Twist
 from nav_msgs.msg import Odometry
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from rclpy.qos import qos_profile_sensor_data
-from sensor_msgs.msg import JointState, LaserScan
+from rosgraph_msgs.msg import Clock
+from sensor_msgs.msg import Imu, JointState, LaserScan
 from std_msgs.msg import String
 from std_srvs.srv import Trigger
 from tf2_ros import TransformBroadcaster
@@ -77,6 +79,8 @@ class RsMujocoSync(Node):
         self.declare_parameter("base_footprint_frame", "base_footprint")
         self.declare_parameter("base_link_frame", "base_link")
         self.declare_parameter("publish_tf", True)
+        self.declare_parameter("publish_clock", True)
+        self.declare_parameter("clock_publish_rate", 100.0)
         self.declare_parameter("laser_topic", "/scan")
         self.declare_parameter("laser_frame", "laser")
         self.declare_parameter("laser_enabled", True)
@@ -86,11 +90,18 @@ class RsMujocoSync(Node):
         self.declare_parameter("laser_max_angle", np.pi)
         self.declare_parameter("laser_min_range", 0.08)
         self.declare_parameter("laser_max_range", 12.0)
+        self.declare_parameter("laser_range_noise_stddev", 0.005)
+        self.declare_parameter("sensor_noise_seed", 7)
+        self.declare_parameter("imu_topic", "/imu")
+        self.declare_parameter("imu_frame", "imu_link")
+        self.declare_parameter("imu_enabled", True)
+        self.declare_parameter("imu_publish_rate", 100.0)
         self.declare_parameter("odom_publish_rate", 30.0)
         self.declare_parameter("target_visible_timeout", 0.7)
         self.declare_parameter("model_path", "")
         self.declare_parameter("simulation_mode", "kinematic")
         self.declare_parameter("update_rate", 250.0)
+        self.declare_parameter("viewer_sync_rate", 30.0)
         self.declare_parameter("smoothing_alpha", 1.0)
         self.declare_parameter("stale_timeout", 1.0)
         self.declare_parameter("use_viewer", False)
@@ -108,13 +119,15 @@ class RsMujocoSync(Node):
         self.declare_parameter("gripper_kd", 18.0)
         self.declare_parameter("gripper_tau_limit", 64.0)
         self.declare_parameter("enable_agv_drive", True)
+        self.declare_parameter("agv_drive_mode", "velocity")
         self.declare_parameter("wheel_radius", 0.05)
         self.declare_parameter("wheel_track", 0.46)
-        self.declare_parameter("agv_kp", 1.5)
-        self.declare_parameter("agv_kd", 0.08)
-        self.declare_parameter("agv_tau_limit", 2.0)
-        self.declare_parameter("agv_max_linear_velocity", 0.20)
-        self.declare_parameter("agv_max_angular_velocity", 1.0)
+        self.declare_parameter("agv_kp", 2.5)
+        self.declare_parameter("agv_kd", 0.12)
+        self.declare_parameter("agv_tau_limit", 8.0)
+        self.declare_parameter("agv_max_linear_velocity", 0.80)
+        self.declare_parameter("agv_max_reverse_velocity", 0.50)
+        self.declare_parameter("agv_max_angular_velocity", 1.80)
         self.declare_parameter("cmd_vel_timeout", 0.5)
         self.declare_parameter("base_pose_publish_rate", 30.0)
 
@@ -135,6 +148,8 @@ class RsMujocoSync(Node):
         odom_topic = odom_topic or "/odom"
         laser_topic = str(self.get_parameter("laser_topic").value).strip()
         laser_topic = laser_topic or "/scan"
+        imu_topic = str(self.get_parameter("imu_topic").value).strip()
+        imu_topic = imu_topic or "/imu"
 
         requested_path = str(self.get_parameter("model_path").value).strip()
         self.model_path = (
@@ -152,6 +167,9 @@ class RsMujocoSync(Node):
             raise ValueError("simulation_mode must be 'kinematic' or 'physics'")
 
         self.update_rate = max(float(self.get_parameter("update_rate").value), 1.0)
+        self.viewer_sync_period = 1.0 / max(
+            float(self.get_parameter("viewer_sync_rate").value), 1.0
+        )
         self.smoothing_alpha = float(
             np.clip(self.get_parameter("smoothing_alpha").value, 0.01, 1.0)
         )
@@ -171,6 +189,11 @@ class RsMujocoSync(Node):
         self.enable_agv_drive = bool(
             self.get_parameter("enable_agv_drive").value
         )
+        self.agv_drive_mode = str(
+            self.get_parameter("agv_drive_mode").value
+        ).strip().lower()
+        if self.agv_drive_mode not in ("velocity", "wheel"):
+            raise ValueError("agv_drive_mode must be 'velocity' or 'wheel'")
         self.wheel_radius = max(
             float(self.get_parameter("wheel_radius").value), 1e-4
         )
@@ -182,6 +205,9 @@ class RsMujocoSync(Node):
         )
         self.agv_max_linear_velocity = max(
             float(self.get_parameter("agv_max_linear_velocity").value), 0.0
+        )
+        self.agv_max_reverse_velocity = max(
+            float(self.get_parameter("agv_max_reverse_velocity").value), 0.0
         )
         self.agv_max_angular_velocity = max(
             float(self.get_parameter("agv_max_angular_velocity").value), 0.0
@@ -205,6 +231,10 @@ class RsMujocoSync(Node):
             str(self.get_parameter("base_link_frame").value).strip() or "base_link"
         )
         self.publish_tf = bool(self.get_parameter("publish_tf").value)
+        self.publish_clock = bool(self.get_parameter("publish_clock").value)
+        self.clock_period = 1.0 / max(
+            float(self.get_parameter("clock_publish_rate").value), 1.0
+        )
         self.laser_frame = (
             str(self.get_parameter("laser_frame").value).strip() or "laser"
         )
@@ -230,6 +260,12 @@ class RsMujocoSync(Node):
             float(self.get_parameter("laser_max_range").value),
             self.laser_min_range + 1e-6,
         )
+        self.laser_range_noise_stddev = max(
+            float(self.get_parameter("laser_range_noise_stddev").value), 0.0
+        )
+        self._sensor_rng = np.random.default_rng(
+            int(self.get_parameter("sensor_noise_seed").value)
+        )
         self.laser_angles = np.linspace(
             self.laser_min_angle,
             self.laser_max_angle,
@@ -238,6 +274,14 @@ class RsMujocoSync(Node):
         )
         self.odom_period = 1.0 / max(
             float(self.get_parameter("odom_publish_rate").value), 1.0
+        )
+        self.imu_topic = imu_topic
+        self.imu_frame = (
+            str(self.get_parameter("imu_frame").value).strip() or "imu_link"
+        )
+        self.imu_enabled = bool(self.get_parameter("imu_enabled").value)
+        self.imu_period = 1.0 / max(
+            float(self.get_parameter("imu_publish_rate").value), 1.0
         )
         self.target_visible_timeout = max(
             float(self.get_parameter("target_visible_timeout").value),
@@ -330,6 +374,29 @@ class RsMujocoSync(Node):
                 laser_position - base_position
             )
             self._base_to_laser_quat = relative_quat
+        self.imu_body_id = mujoco.mj_name2id(
+            self.model, mujoco.mjtObj.mjOBJ_BODY, "imu"
+        )
+        if self.imu_body_id < 0:
+            if self.imu_enabled:
+                self.get_logger().warn("MuJoCo body 'imu' not found; IMU disabled")
+            self.imu_enabled = False
+            self._base_to_imu_pos = np.zeros(3, dtype=np.float64)
+            self._base_to_imu_quat = np.array(
+                [1.0, 0.0, 0.0, 0.0], dtype=np.float64
+            )
+        else:
+            base_position = self.data.xpos[self.base_body_id]
+            base_rotation = self.data.xmat[self.base_body_id].reshape(3, 3)
+            imu_position = self.data.xpos[self.imu_body_id]
+            imu_rotation = self.data.xmat[self.imu_body_id].reshape(3, 3)
+            relative_rotation = base_rotation.T @ imu_rotation
+            relative_quat = np.zeros(4, dtype=np.float64)
+            mujoco.mju_mat2Quat(relative_quat, relative_rotation.flatten())
+            self._base_to_imu_pos = base_rotation.T @ (
+                imu_position - base_position
+            )
+            self._base_to_imu_quat = relative_quat
         self._ray_geom_id = np.zeros(1, dtype=np.int32)
         self.wheel_joint_ids = np.array(
             [
@@ -377,10 +444,15 @@ class RsMujocoSync(Node):
         self.last_odom_publish_time = 0.0
         self.last_tf_publish_time = 0.0
         self.last_laser_publish_time = 0.0
+        self.last_clock_publish_sim_time = -np.inf
+        self.last_imu_publish_sim_time = -np.inf
         self._reset_odom_reference_locked()
+        self._reset_imu_reference_locked()
         self._cmd_vel = np.zeros(2, dtype=np.float64)
         self._cmd_vel_time: float | None = None
+        self._physics_step_accumulator = 0.0
         self._last_update_time = time.monotonic()
+        self._last_viewer_sync_time = -np.inf
 
         self.publisher = self.create_publisher(
             JointState,
@@ -405,6 +477,16 @@ class RsMujocoSync(Node):
         self.laser_publisher = self.create_publisher(
             LaserScan,
             laser_topic,
+            qos_profile_sensor_data,
+        )
+        self.clock_publisher = self.create_publisher(
+            Clock,
+            "/clock",
+            qos_profile_sensor_data,
+        )
+        self.imu_publisher = self.create_publisher(
+            Imu,
+            imu_topic,
             qos_profile_sensor_data,
         )
         self.tf_broadcaster = TransformBroadcaster(self)
@@ -440,10 +522,12 @@ class RsMujocoSync(Node):
 
         self.timer = self.create_timer(1.0 / self.update_rate, self._update)
         self.get_logger().info(
-            f"RS MuJoCo ready: mode={self.simulation_mode}, input={input_topic}, "
+            f"RS MuJoCo ready: mode={self.simulation_mode}, "
+            f"agv_drive={self.agv_drive_mode}, input={input_topic}, "
             f"output={output_topic}, target_pose={target_pose_topic}, "
             f"cmd_vel={cmd_vel_topic}, base_pose={base_pose_topic}, "
-            f"odom={odom_topic}, scan={laser_topic}, "
+            f"odom={odom_topic}, scan={laser_topic}, imu={imu_topic}, "
+            f"clock={'on' if self.publish_clock else 'off'}, "
             f"model={self.model_path}"
         )
 
@@ -459,7 +543,36 @@ class RsMujocoSync(Node):
         self._odom_origin_yaw = yaw
         self._last_odom_position = position[:2].copy()
         self._last_odom_yaw = 0.0
-        self._last_odom_time = time.monotonic()
+        self._last_odom_time = float(self.data.time)
+
+    def _reset_imu_reference_locked(self) -> None:
+        position, _, yaw = self._base_planar_pose_locked()
+        self._imu_last_position = position.copy()
+        self._imu_last_velocity = np.zeros(3, dtype=np.float64)
+        self._imu_last_yaw = yaw
+        self._imu_last_sim_time = float(self.data.time)
+
+    def _sim_stamp(self) -> TimeMsg:
+        seconds = max(float(self.data.time), 0.0)
+        sec = int(seconds)
+        nanosec = int(round((seconds - sec) * 1_000_000_000))
+        if nanosec >= 1_000_000_000:
+            sec += 1
+            nanosec -= 1_000_000_000
+        return TimeMsg(sec=sec, nanosec=nanosec)
+
+    @staticmethod
+    def _advance_schedule(
+        now: float, last_deadline: float, period: float
+    ) -> tuple[bool, float]:
+        """Keep periodic publishers on their requested average simulation rate."""
+        if not np.isfinite(last_deadline):
+            return True, now
+        elapsed = now - last_deadline
+        if elapsed + 1e-12 < period:
+            return False, last_deadline
+        periods = max(1, int(np.floor((elapsed + 1e-12) / period)))
+        return True, last_deadline + periods * period
 
     def _odom_pose_locked(self) -> tuple[np.ndarray, np.ndarray, np.ndarray, float]:
         position, rotation, yaw = self._base_planar_pose_locked()
@@ -544,7 +657,11 @@ class RsMujocoSync(Node):
             return
         self._cmd_vel = np.array(
             [
-                np.clip(linear, -self.agv_max_linear_velocity, self.agv_max_linear_velocity),
+                np.clip(
+                    linear,
+                    -self.agv_max_reverse_velocity,
+                    self.agv_max_linear_velocity,
+                ),
                 np.clip(angular, -self.agv_max_angular_velocity, self.agv_max_angular_velocity),
             ],
             dtype=np.float64,
@@ -606,7 +723,10 @@ class RsMujocoSync(Node):
 
     def _update(self) -> None:
         now = time.monotonic()
-        dt = min(now - self._last_update_time, 2.0 / self.update_rate)
+        # Viewer synchronization and occasional ROS scheduling delays can make
+        # one callback late. Advance physics by elapsed wall time so simulation
+        # does not fall into slow motion, while limiting a single catch-up step.
+        dt = min(max(now - self._last_update_time, 0.0), 0.05)
         self._last_update_time = now
 
         arm_command_active = self.last_input_time is not None and (
@@ -622,18 +742,22 @@ class RsMujocoSync(Node):
             if self.simulation_mode == "kinematic":
                 self._update_kinematic(dt, arm_command_active)
             else:
-                self._update_physics()
+                self._update_physics(dt)
             if self._apply_target_pose_locked():
                 mujoco.mj_forward(self.model, self.data)
+            self._publish_clock_locked()
             self._publish_state()
             self._publish_object_states()
             self._publish_base_pose()
             self._publish_odom_locked()
             self._publish_laser_locked()
+            self._publish_imu_locked()
             self._publish_tf_locked()
         if self.viewer is not None:
             if self.viewer.is_running():
-                self.viewer.sync()
+                if now - self._last_viewer_sync_time >= self.viewer_sync_period:
+                    self.viewer.sync()
+                    self._last_viewer_sync_time = now
             else:
                 self.viewer.close()
                 self.viewer = None
@@ -666,6 +790,7 @@ class RsMujocoSync(Node):
         if dt > 0.0:
             self._integrate_base_pose_locked(cmd_vel, dt)
             self.data.qpos[self.wheel_qpos_addrs] += wheel_velocity * dt
+            self.data.time += dt
         self.data.qvel[self.wheel_dof_addrs] = wheel_velocity
         mujoco.mj_forward(self.model, self.data)
 
@@ -745,9 +870,13 @@ class RsMujocoSync(Node):
             self.model.site_rgba[self.target_site_id] = rgba
         return True
 
-    def _update_physics(self) -> None:
+    def _update_physics(self, dt: float) -> None:
         timestep = float(self.model.opt.timestep)
-        steps = max(1, int(round((1.0 / self.update_rate) / timestep)))
+        self._physics_step_accumulator += dt
+        steps = int(self._physics_step_accumulator / timestep)
+        if steps < 1:
+            return
+        self._physics_step_accumulator -= steps * timestep
         for _ in range(steps):
             q = self.data.qpos[self.arm_qpos_addrs]
             qd = self.data.qvel[self.arm_dof_addrs]
@@ -768,6 +897,8 @@ class RsMujocoSync(Node):
                 np.clip(gripper_tau, -self.gripper_tau_limit, self.gripper_tau_limit)
             )
             self._apply_wheel_physics_control()
+            if self.agv_drive_mode == "velocity":
+                self._apply_base_velocity_control()
             mujoco.mj_step(self.model, self.data)
 
     def _apply_wheel_physics_control(self) -> None:
@@ -780,9 +911,23 @@ class RsMujocoSync(Node):
             wheel_tau, -self.agv_tau_limit, self.agv_tau_limit
         )
 
+    def _apply_base_velocity_control(self) -> None:
+        """Track planar velocity like Gazebo's model velocity controller."""
+        linear, angular = self._active_cmd_vel()
+        rotation = self.data.xmat[self.base_body_id].reshape(3, 3)
+        forward = rotation[:, 0]
+        base_velocity = self.data.qvel[
+            self.base_dof_addr : self.base_dof_addr + 6
+        ]
+        base_velocity[0] = float(forward[0] * linear)
+        base_velocity[1] = float(forward[1] * linear)
+        base_velocity[3] = 0.0
+        base_velocity[4] = 0.0
+        base_velocity[5] = float(angular)
+
     def _publish_state(self) -> None:
         msg = JointState()
-        msg.header.stamp = self.get_clock().now().to_msg()
+        msg.header.stamp = self._sim_stamp()
         msg.name = [
             *_ARM_JOINTS,
             "gripper_joint1",
@@ -814,7 +959,7 @@ class RsMujocoSync(Node):
         self.last_publish_time = time.monotonic()
 
     def _publish_object_states(self) -> None:
-        now = time.monotonic()
+        now = float(self.data.time)
         if now - self.last_object_publish_time < self.object_publish_period:
             return
         objects = []
@@ -837,11 +982,11 @@ class RsMujocoSync(Node):
         self.last_object_publish_time = now
 
     def _publish_base_pose(self) -> None:
-        now = time.monotonic()
+        now = float(self.data.time)
         if now - self.last_base_pose_publish_time < self.base_pose_period:
             return
         msg = PoseStamped()
-        msg.header.stamp = self.get_clock().now().to_msg()
+        msg.header.stamp = self._sim_stamp()
         msg.header.frame_id = "world"
         position = self.data.xpos[self.base_body_id]
         quaternion = self.data.xquat[self.base_body_id]
@@ -856,7 +1001,7 @@ class RsMujocoSync(Node):
         self.last_base_pose_publish_time = now
 
     def _publish_odom_locked(self) -> None:
-        now = time.monotonic()
+        now = float(self.data.time)
         if now - self.last_odom_publish_time < self.odom_period:
             return
 
@@ -871,7 +1016,7 @@ class RsMujocoSync(Node):
         angular_velocity = yaw_delta / elapsed
 
         msg = Odometry()
-        msg.header.stamp = self.get_clock().now().to_msg()
+        msg.header.stamp = self._sim_stamp()
         msg.header.frame_id = self.odom_frame
         msg.child_frame_id = self.base_footprint_frame
         msg.pose.pose.position.x = float(odom_position[0])
@@ -893,7 +1038,7 @@ class RsMujocoSync(Node):
     def _publish_laser_locked(self) -> None:
         if not self.laser_enabled:
             return
-        now = time.monotonic()
+        now = float(self.data.time)
         if now - self.last_laser_publish_time < self.laser_period:
             return
 
@@ -918,10 +1063,17 @@ class RsMujocoSync(Node):
                 distance > 0.0
                 and self.laser_min_range <= distance <= self.laser_max_range
             ):
+                if self.laser_range_noise_stddev > 0.0:
+                    distance += float(
+                        self._sensor_rng.normal(0.0, self.laser_range_noise_stddev)
+                    )
+                    distance = float(
+                        np.clip(distance, self.laser_min_range, self.laser_max_range)
+                    )
                 ranges[index] = distance
 
         msg = LaserScan()
-        msg.header.stamp = self.get_clock().now().to_msg()
+        msg.header.stamp = self._sim_stamp()
         msg.header.frame_id = self.laser_frame
         msg.angle_min = float(self.laser_angles[0])
         msg.angle_max = float(self.laser_angles[-1])
@@ -936,15 +1088,89 @@ class RsMujocoSync(Node):
         self.laser_publisher.publish(msg)
         self.last_laser_publish_time = now
 
+    def _publish_clock_locked(self) -> None:
+        if not self.publish_clock:
+            return
+        now = float(self.data.time)
+        due, next_deadline = self._advance_schedule(
+            now, self.last_clock_publish_sim_time, self.clock_period
+        )
+        if not due:
+            return
+        msg = Clock()
+        msg.clock = self._sim_stamp()
+        self.clock_publisher.publish(msg)
+        self.last_clock_publish_sim_time = next_deadline
+
+    def _publish_imu_locked(self) -> None:
+        if not self.imu_enabled:
+            return
+        now = float(self.data.time)
+        due, next_deadline = self._advance_schedule(
+            now, self.last_imu_publish_sim_time, self.imu_period
+        )
+        if not due:
+            return
+
+        position, rotation, yaw = self._base_planar_pose_locked()
+        elapsed = now - self._imu_last_sim_time
+        if elapsed > 1e-9:
+            world_velocity = (position - self._imu_last_position) / elapsed
+            world_acceleration = (
+                world_velocity - self._imu_last_velocity
+            ) / elapsed
+            yaw_delta = float(
+                np.arctan2(
+                    np.sin(yaw - self._imu_last_yaw),
+                    np.cos(yaw - self._imu_last_yaw),
+                )
+            )
+            angular_velocity = yaw_delta / elapsed
+        else:
+            world_velocity = np.zeros(3, dtype=np.float64)
+            world_acceleration = np.zeros(3, dtype=np.float64)
+            angular_velocity = 0.0
+
+        # An accelerometer at rest measures +g along its local Z axis.
+        specific_force = rotation.T @ (
+            world_acceleration + np.array([0.0, 0.0, 9.81])
+        )
+        quaternion = self.data.xquat[self.base_body_id]
+        msg = Imu()
+        msg.header.stamp = self._sim_stamp()
+        msg.header.frame_id = self.imu_frame
+        msg.orientation.w = float(quaternion[0])
+        msg.orientation.x = float(quaternion[1])
+        msg.orientation.y = float(quaternion[2])
+        msg.orientation.z = float(quaternion[3])
+        msg.angular_velocity.z = float(angular_velocity)
+        msg.linear_acceleration.x = float(specific_force[0])
+        msg.linear_acceleration.y = float(specific_force[1])
+        msg.linear_acceleration.z = float(specific_force[2])
+        msg.orientation_covariance = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0025]
+        msg.angular_velocity_covariance = [
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.001
+        ]
+        msg.linear_acceleration_covariance = [
+            0.01, 0.0, 0.0, 0.0, 0.01, 0.0, 0.0, 0.0, 0.02
+        ]
+        self.imu_publisher.publish(msg)
+
+        self._imu_last_position = position
+        self._imu_last_velocity = world_velocity
+        self._imu_last_yaw = yaw
+        self._imu_last_sim_time = now
+        self.last_imu_publish_sim_time = next_deadline
+
     def _publish_tf_locked(self) -> None:
         if not self.publish_tf:
             return
-        now = time.monotonic()
+        now = float(self.data.time)
         if now - self.last_tf_publish_time < self.odom_period:
             return
 
         odom_position, world_position, _, yaw = self._odom_pose_locked()
-        stamp = self.get_clock().now().to_msg()
+        stamp = self._sim_stamp()
         odom_to_footprint = TransformStamped()
         odom_to_footprint.header.stamp = stamp
         odom_to_footprint.header.frame_id = self.odom_frame
@@ -978,8 +1204,20 @@ class RsMujocoSync(Node):
         base_to_laser.transform.rotation.y = float(self._base_to_laser_quat[2])
         base_to_laser.transform.rotation.z = float(self._base_to_laser_quat[3])
 
+        base_to_imu = TransformStamped()
+        base_to_imu.header.stamp = stamp
+        base_to_imu.header.frame_id = self.base_link_frame
+        base_to_imu.child_frame_id = self.imu_frame
+        base_to_imu.transform.translation.x = float(self._base_to_imu_pos[0])
+        base_to_imu.transform.translation.y = float(self._base_to_imu_pos[1])
+        base_to_imu.transform.translation.z = float(self._base_to_imu_pos[2])
+        base_to_imu.transform.rotation.w = float(self._base_to_imu_quat[0])
+        base_to_imu.transform.rotation.x = float(self._base_to_imu_quat[1])
+        base_to_imu.transform.rotation.y = float(self._base_to_imu_quat[2])
+        base_to_imu.transform.rotation.z = float(self._base_to_imu_quat[3])
+
         self.tf_broadcaster.sendTransform(
-            [odom_to_footprint, footprint_to_base, base_to_laser]
+            [odom_to_footprint, footprint_to_base, base_to_laser, base_to_imu]
         )
         self.last_tf_publish_time = now
 
@@ -992,9 +1230,14 @@ class RsMujocoSync(Node):
         self._last_update_time = time.monotonic()
         mujoco.mj_forward(self.model, self.data)
         self._reset_odom_reference_locked()
+        self._reset_imu_reference_locked()
         self.last_odom_publish_time = 0.0
         self.last_tf_publish_time = 0.0
         self.last_laser_publish_time = 0.0
+        self.last_clock_publish_sim_time = -np.inf
+        self.last_imu_publish_sim_time = -np.inf
+        self._physics_step_accumulator = 0.0
+        self._last_viewer_sync_time = -np.inf
         response.success = True
         response.message = "RS MuJoCo reset"
         return response
