@@ -49,14 +49,12 @@ npm run test:explode
 - 腕部模型：加入经 B601-RS 实机验证的 D405 30° 向下支架、9 mm 光心对齐偏移和相机外壳代理，并提供独立的模型显示开关。
 - 爆炸视图和零件选择只改变 Three.js 显示，不修改 MuJoCo 物理状态。
 
-## GitHub Pages
+仓库已配置 GitHub Actions workflow，推送 `main` 分支后自动构建并部署到 GitHub Pages：
 
-如果后续为当前仓库添加 GitHub Pages workflow，可用 Vite 的 `GITHUB_PAGES_BASE`
-环境变量生成子路径部署包。
+**https://yang-ci.github.io/Rebot_Arm_AGV/**
 
-地址为：
+Vite 通过 `GITHUB_PAGES_BASE=/Rebot_Arm_AGV/` 环境变量生成子路径部署包。
 
-`https://<owner>.github.io/Rebot_Arm_AGV/`
 
 首次打开会下载全部网格，请用 Chrome 或 Edge。
 
