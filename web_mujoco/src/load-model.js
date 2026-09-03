@@ -3,6 +3,15 @@ const DEFAULT_SCENE_XML = 'rs_grasp_scene.xml';
 const DOWNLOAD_CONCURRENCY = 6;
 const MODEL_VERSION = typeof __MODEL_VERSION__ === 'undefined' ? 'dev' : __MODEL_VERSION__;
 const SUPPORTS_GZIP_STREAM = typeof DecompressionStream === 'function';
+const MUJOCO_CDN_BASE =
+  typeof __MUJOCO_VERSION__ !== 'undefined'
+    ? `https://cdn.jsdelivr.net/npm/@mujoco/mujoco@${__MUJOCO_VERSION__}/`
+    : 'https://cdn.jsdelivr.net/npm/@mujoco/mujoco@3.12.0/';
+
+function shouldLoadWasmFromCdn() {
+  if (import.meta.env.DEV) return false;
+  return import.meta.env.VITE_MUJOCO_WASM_CDN !== 'local';
+}
 
 function isMeshFile(relative) {
   return /\.(?:stl|obj|msh)$/i.test(relative);
@@ -14,7 +23,20 @@ function modelUrl(relative, compressed = false) {
 
 export async function loadMujocoModule() {
   const loadMujoco = (await import('@mujoco/mujoco')).default;
-  return loadMujoco();
+  if (!shouldLoadWasmFromCdn()) {
+    return loadMujoco();
+  }
+  const cdnWasmUrl = `${MUJOCO_CDN_BASE}mujoco.wasm`;
+  try {
+    const res = await fetch(cdnWasmUrl, { method: 'HEAD', mode: 'cors' });
+    if (!res.ok) throw new Error(`CDN returned ${res.status}`);
+  } catch (error) {
+    console.warn(`MuJoCo WASM CDN 不可用，回退本地资源：${error?.message || error}`);
+    return loadMujoco();
+  }
+  return loadMujoco({
+    locateFile: (path) => `${MUJOCO_CDN_BASE}${path}`
+  });
 }
 
 function parseIncludesAndMeshes(xmlText) {

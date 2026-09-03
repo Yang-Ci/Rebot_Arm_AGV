@@ -57,6 +57,8 @@ Vite 通过 `GITHUB_PAGES_BASE=/Rebot_Arm_AGV/` 环境变量生成子路径部�
 
 
 首次打开会下载全部网格，请用 Chrome 或 Edge。
+生产环境的 `mujoco.wasm` 默认从 jsDelivr CDN 加载，加快全球访问；
+如需强制使用本地文件，可在构建时设置 `VITE_MUJOCO_WASM_CDN=local`。
 
 本地预览生产包：
 

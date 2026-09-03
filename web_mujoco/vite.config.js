@@ -8,6 +8,11 @@ import { defineConfig } from 'vite';
 const root = path.dirname(fileURLToPath(import.meta.url));
 const modelsSrc = path.resolve(root, '../rebotarm_mujoco_rs/models');
 const modelsSrcAbs = path.resolve(modelsSrc);
+const mujocoPkgPath = path.resolve(root, 'node_modules/@mujoco/mujoco/package.json');
+const mujocoVersion = existsSync(mujocoPkgPath)
+  ? JSON.parse(readFileSync(mujocoPkgPath, 'utf8')).version
+  : '3.12.0';
+
 
 function collectFiles(dir) {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
@@ -55,7 +60,8 @@ function pagesBase() {
 export default defineConfig({
   base: pagesBase(),
   define: {
-    __MODEL_VERSION__: JSON.stringify(modelVersion)
+    __MODEL_VERSION__: JSON.stringify(modelVersion),
+    __MUJOCO_VERSION__: JSON.stringify(mujocoVersion)
   },
   optimizeDeps: {
     exclude: ['@mujoco/mujoco']
