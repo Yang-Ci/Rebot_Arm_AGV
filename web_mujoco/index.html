@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>reBot Arm B601-RS · Sim</title>
+  <link rel="stylesheet" href="/src/style.css">
+</head>
+<body>
+  <main class="app">
+    <section class="viewport" id="viewport">
+      <div class="loading-overlay" id="loading-overlay" role="status" aria-live="polite">
+        <div class="loading-ring" aria-hidden="true"></div>
+        <p class="loading-title" data-i18n="loading.title">正在构建数字孪生</p>
+        <p class="loading-text" id="loading-text">正在启动…</p>
+        <div class="loading-progress" id="loading-progress" role="progressbar" aria-label="Loading" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+          <div class="loading-progress-track" aria-hidden="true">
+            <div class="loading-progress-fill" id="loading-progress-fill"></div>
+          </div>
+          <span class="loading-progress-value" id="loading-progress-value">0%</span>
+        </div>
+      </div>
+      <div class="callouts" id="callouts"></div>
+      <div id="drag-cluster" class="drag-cluster">
+        <div id="drag-marker" class="drag-marker" data-i18n-title="marker.tcp" title="拖拽 TCP"></div>
+        <div class="gripper-fab">
+          <button type="button" id="gripper-open" data-i18n="btn.open">开</button>
+          <button type="button" id="gripper-close" data-i18n="btn.close">合</button>
+        </div>
+      </div>
+      <div class="agv-drive-hud" id="agv-controls" hidden>
+        <div class="agv-drive-hud-heading">
+          <strong data-i18n="agv.title">AGV 驾驶</strong>
+          <span>WASD / ↑↓←→</span>
+        </div>
+        <label class="agv-speed-control" for="agv-linear-speed">
+          <span data-i18n="agv.driveSpeed">行驶速度</span>
+          <input id="agv-linear-speed" type="range" min="0.10" max="0.80" step="0.05" value="0.65">
+          <output id="agv-linear-speed-value" for="agv-linear-speed">0.65 m/s</output>
+        </label>
+        <label class="agv-speed-control" for="agv-turn-speed">
+          <span data-i18n="agv.turnSpeed">转向速度</span>
+          <input id="agv-turn-speed" type="range" min="0.30" max="1.80" step="0.10" value="1.40">
+          <output id="agv-turn-speed-value" for="agv-turn-speed">1.40 rad/s</output>
+        </label>
+        <div class="agv-nav-actions">
+          <button type="button" id="set-nav-goal" data-i18n="agv.setGoal">设置导航点</button>
+          <button type="button" id="go-nav-goal" data-i18n="agv.goGoal" disabled>前往导航点</button>
+          <button type="button" id="go-grasp-zone" data-i18n="agv.goGrasp">前往抓取区</button>
+          <button type="button" id="cancel-navigation" data-i18n="agv.cancelNav" disabled>停止导航</button>
+        </div>
+        <p class="agv-navigation-state" id="agv-navigation-state" data-i18n="agv.noGoal">尚未设置导航点</p>
+        <p data-i18n="agv.keyboardHint">使用键盘驾驶，松开按键停车；空格键立即停止。</p>
+      </div>
+      <div class="object-edit-hud" id="object-edit-hud" hidden>
+        <div class="object-edit-hud-heading">
+          <strong data-i18n="object.hudTitle">物体编辑</strong>
+          <span>WASD</span>
+        </div>
+        <p class="object-edit-selection" id="object-edit-selection">已选：红色方块</p>
+        <p data-i18n="object.hudMove">W 前 / S 后 / A 左 / D 右；左键拖动平移</p>
+        <p data-i18n="object.hudRotate">右键拖动或 Shift + 左键拖动：三维旋转</p>
+      </div>
+    </section>
+    <aside class="panel">
+      <p class="eyebrow" data-i18n="panel.eyebrow">M2 物理演示</p>
+      <h1 data-i18n="panel.title">B601-RS Sim</h1>
+      <p class="status" id="status">正在启动…</p>
+      <p class="hint" id="panel-hint" data-i18n="panel.hint">在画面上按住 TCP 标记拖动即可移动末端；点旁边的开/合控制夹爪。</p>
+      <div class="button-row">
+        <label class="variant-picker">
+          <span data-i18n="variant.label">产品配置</span>
+          <select id="model-variant" class="variant-select" data-i18n-aria-label="variant.aria">
+            <option value="arm" data-i18n="variant.arm">标准机械臂</option>
+            <option value="agv" data-i18n="variant.agv">AGV 底盘款</option>
+          </select>
+        </label>
+        <button type="button" id="toggle-drag" data-i18n="btn.dragOn">启用 TCP 拖拽</button>
+        <button type="button" id="reset" data-i18n="btn.reset">复位</button>
+        <button type="button" id="toggle-guides" data-i18n="btn.guidesOn" aria-pressed="false">显示全部引导线</button>
+        <select id="lang-select" class="lang-select" aria-label="选择语言">
+          <option value="zh">🇨🇳 中文</option>
+          <option value="ja">🇯🇵 日本語</option>
+          <option value="en">🇬🇧 English</option>
+        </select>
+      </div>
+      <section class="control-card camera-controls" aria-labelledby="camera-controls-title">
+        <div class="control-card-heading">
+          <h2 id="camera-controls-title" data-i18n="camera.title">视觉模式</h2>
+          <button type="button" id="toggle-camera-views" class="camera-power-switch"
+                  role="switch" aria-checked="true" data-i18n="camera.hideAll">关闭画面</button>
+        </div>
+        <div class="camera-toolbar">
+          <div class="camera-layout-switch" role="group" data-i18n-aria-label="camera.layoutAria">
+            <button type="button" id="camera-layout-row" class="active" aria-pressed="true" data-i18n="camera.layoutRow">横排</button>
+            <button type="button" id="camera-layout-column" aria-pressed="false" data-i18n="camera.layoutColumn">纵列</button>
+          </div>
+          <button type="button" id="toggle-camera-model" class="camera-model-switch"
+                  role="switch" aria-checked="true" data-i18n="camera.modelHide">隐藏模型相机</button>
+        </div>
+        <div class="camera-feed-grid" id="camera-feed-grid">
+          <article class="camera-feed is-live" id="overhead-camera-feed">
+            <div class="camera-feed-heading">
+              <span data-i18n="camera.overhead">全局俯视相机</span>
+              <div class="camera-feed-actions">
+                <span class="camera-mode-badge">RGB</span>
+                <button type="button" class="camera-collapse" id="collapse-overhead-camera"
+                        aria-expanded="true" aria-controls="overhead-camera-screen"
+                        data-i18n-aria-label="camera.collapse">⌃</button>
+              </div>
+            </div>
+            <div class="camera-screen" id="overhead-camera-screen">
+              <canvas id="overhead-camera-canvas" width="320" height="240" data-i18n-aria-label="camera.overheadAria"></canvas>
+              <span class="camera-paused" data-i18n="camera.paused">画面已暂停</span>
+            </div>
+          </article>
+          <article class="camera-feed is-live" id="wrist-camera-feed">
+            <div class="camera-feed-heading">
+              <span data-i18n="camera.wrist">D405 腕部相机 · 30°</span>
+              <div class="camera-feed-actions">
+                <span class="camera-mode-badge">RGB</span>
+                <button type="button" class="camera-collapse" id="collapse-wrist-camera"
+                        aria-expanded="true" aria-controls="wrist-camera-screen"
+                        data-i18n-aria-label="camera.collapse">⌃</button>
+              </div>
+            </div>
+            <div class="camera-screen" id="wrist-camera-screen">
+              <canvas id="wrist-camera-canvas" width="320" height="240" data-i18n-aria-label="camera.previewAria"></canvas>
+              <span class="camera-paused" data-i18n="camera.paused">画面已暂停</span>
+            </div>
+          </article>
+        </div>
+      </section>
+      <section class="control-card grasp-controls" id="grasp-controls" aria-labelledby="grasp-title">
+        <div class="control-card-heading">
+          <h2 id="grasp-title" data-i18n="grasp.title">一键抓取演示</h2>
+          <span class="feature-badge">AUTO</span>
+        </div>
+        <p class="control-hint" id="grasp-hint" data-i18n="grasp.hint">从俯视视觉目标中选择颜色，然后放入对应收纳区；也可以一键按顺序叠放。</p>
+        <div class="vision-targets" id="vision-targets" role="group" data-i18n-aria-label="vision.targetAria">
+          <button type="button" class="vision-target active" data-target="red" aria-pressed="true"><i class="target-red"></i><span data-i18n="vision.red">红色方块</span></button>
+          <button type="button" class="vision-target" data-target="blue" aria-pressed="false"><i class="target-blue"></i><span data-i18n="vision.blue">蓝色方块</span></button>
+          <button type="button" class="vision-target" data-target="yellow" aria-pressed="false"><i class="target-yellow"></i><span data-i18n="vision.yellow">黄色圆柱</span></button>
+        </div>
+        <div class="grasp-actions">
+          <button type="button" id="start-grasp" data-i18n="grasp.start">▶ 放入收纳区</button>
+          <button type="button" id="start-stack" data-i18n="grasp.stack">▲ 叠叠乐</button>
+          <button type="button" id="cancel-grasp" disabled data-i18n="grasp.cancel">停止</button>
+        </div>
+        <div class="grasp-progress-row">
+          <progress id="grasp-progress" max="1" value="0"></progress>
+          <output id="grasp-progress-value">0%</output>
+        </div>
+        <p class="grasp-stage"><span data-i18n="grasp.stageLabel">阶段</span><strong id="grasp-stage" aria-live="polite" data-i18n="grasp.stage.idle">等待开始</strong></p>
+      </section>
+      <section class="control-card telemetry-controls" id="telemetry-controls" aria-labelledby="telemetry-title">
+        <div class="control-card-heading">
+          <h2 id="telemetry-title" data-i18n="telemetry.title">接触与受力</h2>
+          <button type="button" id="toggle-contact-visuals" role="switch" aria-checked="true" data-i18n="telemetry.hideContacts">隐藏接触</button>
+        </div>
+        <div class="telemetry-metrics">
+          <div><span data-i18n="telemetry.contacts">接触点</span><strong id="contact-count">0</strong></div>
+          <div><span data-i18n="telemetry.graspForce">抓取力</span><strong id="grasp-force">0.0 N</strong></div>
+          <div><span data-i18n="telemetry.rmsError">RMS 误差</span><strong id="rms-error">0.0 mrad</strong></div>
+        </div>
+        <div class="torque-bars" id="torque-bars" aria-label="Joint torque"></div>
+        <div class="telemetry-chart">
+          <span data-i18n="telemetry.torqueChart">关节扭矩曲线 · N·m</span>
+          <canvas id="torque-chart" width="276" height="88"></canvas>
+        </div>
+        <div class="telemetry-chart">
+          <span data-i18n="telemetry.errorChart">关节误差曲线 · rad</span>
+          <canvas id="error-chart" width="276" height="88"></canvas>
+        </div>
+      </section>
+      <section class="control-card explosion-controls" id="explosion-controls" aria-labelledby="explosion-title">
+        <div class="control-card-heading">
+          <h2 id="explosion-title" data-i18n="timeline.title">爆炸时间线</h2>
+          <output id="explosion-progress-value" for="explosion-progress">0%</output>
+        </div>
+        <input type="range" id="explosion-progress" min="0" max="100" step="0.1" value="0" data-i18n-aria-label="timeline.aria">
+        <p class="timeline-stage"><span data-i18n="timeline.stageLabel">阶段</span><strong id="explosion-stage" aria-live="polite">已装配</strong></p>
+        <div class="timeline-actions">
+          <button type="button" id="toggle-explosion" data-i18n="timeline.forward">▶ 拆解</button>
+          <button type="button" id="pause-explosion" data-i18n="timeline.pause" disabled>Ⅱ 暂停</button>
+          <button type="button" id="reverse-explosion" data-i18n="timeline.reverse" disabled>↶ 还原</button>
+        </div>
+      </section>
+      <section class="control-card part-explorer" id="part-explorer" aria-labelledby="part-explorer-title">
+        <div class="control-card-heading">
+          <h2 id="part-explorer-title" data-i18n="part.title">零件探索</h2>
+          <span class="part-count" data-i18n="part.clickHint">点击模型选择</span>
+        </div>
+        <select id="part-select" class="part-select" data-i18n-aria-label="part.selectAria"></select>
+        <p class="part-empty" id="part-empty" data-i18n="part.empty">选择一个机械臂零件查看信息。</p>
+        <article class="part-details" id="part-details" hidden>
+          <div class="part-name-row">
+            <strong id="part-name"></strong>
+            <span id="part-kind"></span>
+          </div>
+          <dl>
+            <div><dt data-i18n="part.body">所属组件</dt><dd id="part-body"></dd></div>
+            <div><dt data-i18n="part.joint">所属关节</dt><dd id="part-joint"></dd></div>
+            <div><dt data-i18n="part.material">材质</dt><dd id="part-material"></dd></div>
+          </dl>
+          <p id="part-description" class="part-description"></p>
+        </article>
+        <div class="part-actions">
+          <button type="button" id="part-isolate" disabled>隔离零件</button>
+          <button type="button" id="part-clear" disabled>清除选择</button>
+        </div>
+      </section>
+    </aside>
+  </main>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

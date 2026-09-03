@@ -11,6 +11,7 @@ Rebot_Arm_AGV/
 ├── rebotarm_msgs/           # 本地 ROS 2 消息/服务/action 定义
 ├── rebotarm_mujoco_rs/      # 本地 RS + AGV MuJoCo/ROS 2 仿真包
 ├── rebotarm_gazebo/         # Gazebo/MuJoCo 共用的实验室、SLAM 与 Nav2 启动包
+├── web_mujoco/              # 浏览器 MuJoCo：标准机械臂 / AGV 选配款
 ├── mobile_base/
 │   ├── cad/agv_v1/          # 第一版 AGV 底盘 STEP/STL、生成脚本和校验图
 │   └── docs/                # 底盘概念图和轮子方案调研
@@ -25,6 +26,7 @@ Rebot_Arm_AGV/
 - DM 主模型：`DM/urdf/ReBot_Arm_DM.urdf`
 - AGV v1 装配参考：`mobile_base/cad/agv_v1/stl/agv_chassis_with_repository_base_v1.stl`
 - RS + AGV MuJoCo 组合模型：`rebotarm_mujoco_rs/models/rs_agv_scene.xml`
+- Web MuJoCo 入口：`web_mujoco/`（页面顶部切换标准款与 AGV 选配款）
 - 组合模型预览：`rebotarm_mujoco_rs/models/rs_agv_scene_preview.png`
 - AGV 可编辑装配：`mobile_base/cad/agv_v1/step/agv_chassis_assembly_v1.step`
 - 轮子方案：`mobile_base/docs/wheel_options.md`
@@ -65,3 +67,18 @@ ros2 launch rebotarm_gazebo mujoco_navigation.launch.py  # 已有地图 + AMCL +
 默认速度入口采用 linorobot2/Nav2 约定的 `/cmd_vel`。无界面运行时给启动命令
 增加 `use_viewer:=false use_rviz:=false`；需要保留旧命名空间话题时，可在核心
 MuJoCo 启动命令中增加 `cmd_vel_topic:=/rebotarm_rs/cmd_vel`。
+
+## Web MuJoCo
+
+```bash
+cd web_mujoco
+npm install
+npm run dev
+```
+
+默认打开标准机械臂；切换器选择“AGV 选配款”后会加载完整实验室与移动底盘。
+也可以直接访问 `http://127.0.0.1:5173/?variant=agv`。
+
+AGV 款在观察画面左下角支持调速、键盘驾驶、点击设置导航点和自动避障；路径代价会
+优先选择障碍物通道中间。点击“前往抓取区”并完成停靠后，可继续使用“放入收纳区”
+和“叠叠乐”。网页规划器独立于 ROS/Nav2，不会改动导航膨胀系数。

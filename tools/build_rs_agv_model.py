@@ -33,8 +33,10 @@ WHEELS = {
 
 # Match the Gazebo laboratory coordinates.  The AGV starts at (-2.45, -0.55)
 # and docks at x=2.50 in front of the manipulation table centred at x=3.00.
-# The source grasp scene table is centred at x=0.38, hence the 2.615 m offset.
-TASK_SCENE_X_OFFSET = 2.615
+# Lift the complete workcell above the chassis and preserve the source scene's
+# exact arm-to-table transform at the safe x=2.50 dock pose.
+TASK_WORKSPACE_X_OFFSET = 2.500
+TASK_WORKSPACE_Z_OFFSET = 0.136
 AGV_START = (-2.45, -0.55)
 AGV_STL_SOURCE = Path(__file__).resolve().parents[1] / "mobile_base" / "cad" / "agv_v1" / "stl"
 
@@ -216,7 +218,9 @@ def add_chassis(base_body: ET.Element) -> None:
                 quat="0.7071055 0.7071081 0 0",
                 group="3",
                 rgba="0 0 0 0",
-                friction="1.2 0.04 0.004",
+                friction="1.0 0.02 0.002",
+                solref="0.02 1",
+                solimp="0.9 0.95 0.001 0.5 2",
             )
         )
         chassis.append(wheel)
@@ -235,7 +239,9 @@ def offset_task_scene(worldbody: ET.Element) -> None:
         if not position:
             continue
         values = position.split()
-        values[0] = f"{float(values[0]) + TASK_SCENE_X_OFFSET:.6f}"
+        values[0] = f"{float(values[0]) + TASK_WORKSPACE_X_OFFSET:.6f}"
+        if len(values) >= 3:
+            values[2] = f"{float(values[2]) + TASK_WORKSPACE_Z_OFFSET:.6f}"
         child.set("pos", " ".join(values))
 
 
@@ -413,6 +419,33 @@ def add_lab_scene(worldbody: ET.Element) -> None:
     )
 
 
+def add_dock_constraint(root: ET.Element, worldbody: ET.Element) -> None:
+    """Add an inactive mocap weld used only while the AGV is docked."""
+    worldbody.append(
+        element(
+            "body",
+            name="agv_dock_anchor",
+            mocap="true",
+            pos=f"{AGV_START[0]} {AGV_START[1]} 0.136",
+        )
+    )
+    equality = root.find("equality")
+    if equality is None:
+        equality = element("equality")
+        root.append(equality)
+    equality.append(
+        element(
+            "weld",
+            name="agv_dock_weld",
+            body1="base_link",
+            body2="agv_dock_anchor",
+            active="true",
+            solref="100 1",
+            solimp="0.99 0.995 0.0005",
+        )
+    )
+
+
 def build_model(package_dir: Path, output: Path) -> None:
     agv_mesh_dir = package_dir / "models" / "meshes" / "agv"
     agv_mesh_dir.mkdir(parents=True, exist_ok=True)
@@ -473,6 +506,7 @@ def build_model(package_dir: Path, output: Path) -> None:
     base_body.set("pos", f"{AGV_START[0]} {AGV_START[1]} 0.136")
     base_body.insert(0, element("freejoint", name="agv_freejoint"))
     add_chassis(base_body)
+    add_dock_constraint(arm_root, arm_worldbody)
 
     arm_actuator = arm_root.find("actuator")
     if arm_actuator is None:
@@ -504,6 +538,12 @@ def build_model(package_dir: Path, output: Path) -> None:
         scene_section = scene_root.find(tag)
         if scene_section is not None:
             arm_root.append(deepcopy(scene_section))
+
+    option = arm_root.find("option")
+    if option is not None:
+        # ImplicitFast is more stable than Euler with Coulomb friction at the
+        # wheel-ground contacts.
+        option.set("integrator", "implicitfast")
 
     statistic = arm_root.find("statistic")
     if statistic is not None:

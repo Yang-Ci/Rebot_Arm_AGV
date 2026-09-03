@@ -45,6 +45,12 @@ def generate_launch_description():
             DeclareLaunchArgument("viewer_sync_rate", default_value="30.0"),
             DeclareLaunchArgument("smoothing_alpha", default_value="1.0"),
             DeclareLaunchArgument("stale_timeout", default_value="1.0"),
+            DeclareLaunchArgument(
+                "arm_idle_position",
+                default_value="[0.0, 0.0, 0.0, 0.0, 0.0, 0.0]",
+            ),
+            DeclareLaunchArgument("gripper_idle_position", default_value="0.0"),
+            DeclareLaunchArgument("arm_idle_lock", default_value="true"),
             DeclareLaunchArgument("use_viewer", default_value="false"),
             DeclareLaunchArgument(
                 "arm_kp", default_value="[80.0, 100.0, 100.0, 35.0, 25.0, 18.0]"
@@ -164,6 +170,17 @@ def generate_launch_description():
                         ),
                         "stale_timeout": ParameterValue(
                             LaunchConfiguration("stale_timeout"), value_type=float
+                        ),
+                        "arm_idle_position": ParameterValue(
+                            LaunchConfiguration("arm_idle_position"),
+                            value_type=List[float],
+                        ),
+                        "gripper_idle_position": ParameterValue(
+                            LaunchConfiguration("gripper_idle_position"),
+                            value_type=float,
+                        ),
+                        "arm_idle_lock": ParameterValue(
+                            LaunchConfiguration("arm_idle_lock"), value_type=bool
                         ),
                         "use_viewer": ParameterValue(
                             LaunchConfiguration("use_viewer"), value_type=bool

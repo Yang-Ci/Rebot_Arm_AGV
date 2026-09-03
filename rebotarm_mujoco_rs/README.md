@@ -42,6 +42,12 @@ Modes:
 - `kinematic`: directly synchronizes ROS joint state into MuJoCo.
 - `physics`: tracks ROS targets with conservative PD plus MuJoCo bias forces.
 
+If no fresh joint-state target arrives within `stale_timeout`, the bridge
+returns to `arm_idle_position` (all-zero by default) and keeps driving toward
+that pose. By default `arm_idle_lock` additionally applies a parking-brake
+style lock during navigation, which prevents wheel-ground contact vibration
+from exciting the arm. `gripper_idle_position` defaults to closed.
+
 Both modes accept differential-drive commands on `/cmd_vel` by default. The
 kinematic mode integrates the chassis pose directly. Physics mode defaults to
 Gazebo-like planar velocity tracking for repeatable navigation; set

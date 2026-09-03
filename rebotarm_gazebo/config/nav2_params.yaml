@@ -238,7 +238,9 @@ local_costmap:
       inflation_layer:
         plugin: nav2_costmap_2d::InflationLayer
         cost_scaling_factor: 3.0
-        inflation_radius: 0.28
+        # Keep a cost gradient across the 1.2 m navigation corridor so MPPI
+        # prefers its centre instead of the first collision-free grid cell.
+        inflation_radius: 0.65
       voxel_layer:
         plugin: nav2_costmap_2d::VoxelLayer
         enabled: True
@@ -295,7 +297,9 @@ global_costmap:
       inflation_layer:
         plugin: nav2_costmap_2d::InflationLayer
         cost_scaling_factor: 3.0
-        inflation_radius: 0.28
+        # This must exceed the 0.27 m inscribed footprint radius by more than
+        # one 0.05 m cell, otherwise NavFn has no useful clearance gradient.
+        inflation_radius: 0.65
       always_send_full_costmap: True
 
 planner_server:

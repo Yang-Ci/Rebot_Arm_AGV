@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 from contextlib import nullcontext
+import fcntl
 import json
+import os
 from pathlib import Path
+import tempfile
 import time
 
 import mujoco
@@ -104,6 +107,9 @@ class RsMujocoSync(Node):
         self.declare_parameter("viewer_sync_rate", 30.0)
         self.declare_parameter("smoothing_alpha", 1.0)
         self.declare_parameter("stale_timeout", 1.0)
+        self.declare_parameter("arm_idle_position", [0.0] * 6)
+        self.declare_parameter("gripper_idle_position", 0.0)
+        self.declare_parameter("arm_idle_lock", True)
         self.declare_parameter("use_viewer", False)
         self.declare_parameter("object_names", list(_DEFAULT_OBJECTS))
         self.declare_parameter("object_publish_rate", 30.0)
@@ -179,6 +185,11 @@ class RsMujocoSync(Node):
         self.arm_kp = self._vector_parameter("arm_kp")
         self.arm_kd = self._vector_parameter("arm_kd")
         self.arm_tau_limit = self._vector_parameter("arm_tau_limit")
+        self.arm_idle_position = self._vector_parameter("arm_idle_position")
+        self.gripper_idle_position = float(
+            self.get_parameter("gripper_idle_position").value
+        )
+        self.arm_idle_lock = bool(self.get_parameter("arm_idle_lock").value)
         if np.any(self.arm_kp < 0.0) or np.any(self.arm_kd < 0.0):
             raise ValueError("arm_kp and arm_kd values must be non-negative")
         if np.any(self.arm_tau_limit < 0.0):
@@ -290,6 +301,9 @@ class RsMujocoSync(Node):
 
         self.model = mujoco.MjModel.from_xml_path(str(self.model_path))
         self.data = mujoco.MjData(self.model)
+        # MuJoCo resets data.time to zero.  Keep a process-local epoch so ROS
+        # time and every stamped sensor message remain monotonic across reset.
+        self._sim_time_epoch = 0.0
         mujoco.mj_forward(self.model, self.data)
         target_body_id = mujoco.mj_name2id(
             self.model, mujoco.mjtObj.mjOBJ_BODY, "ik_target"
@@ -435,8 +449,8 @@ class RsMujocoSync(Node):
         self._target_visible = True
         self._set_target_visible_locked(False)
 
-        self.target_arm = self.data.qpos[self.arm_qpos_addrs].copy()
-        self.target_gripper = 0.0
+        self.target_arm = self.arm_idle_position.copy()
+        self.target_gripper = self.gripper_idle_position
         self.last_input_time: float | None = None
         self.last_publish_time = 0.0
         self.last_object_publish_time = 0.0
@@ -479,10 +493,11 @@ class RsMujocoSync(Node):
             laser_topic,
             qos_profile_sensor_data,
         )
+        self._clock_lock_fd: int | None = None
+        if self.publish_clock:
+            self._acquire_clock_source_lock()
         self.clock_publisher = self.create_publisher(
-            Clock,
-            "/clock",
-            qos_profile_sensor_data,
+            Clock, "/clock", qos_profile_sensor_data
         )
         self.imu_publisher = self.create_publisher(
             Imu,
@@ -552,14 +567,38 @@ class RsMujocoSync(Node):
         self._imu_last_yaw = yaw
         self._imu_last_sim_time = float(self.data.time)
 
+    def _simulation_time(self) -> float:
+        return max(self._sim_time_epoch + float(self.data.time), 0.0)
+
     def _sim_stamp(self) -> TimeMsg:
-        seconds = max(float(self.data.time), 0.0)
+        seconds = self._simulation_time()
         sec = int(seconds)
         nanosec = int(round((seconds - sec) * 1_000_000_000))
         if nanosec >= 1_000_000_000:
             sec += 1
             nanosec -= 1_000_000_000
         return TimeMsg(sec=sec, nanosec=nanosec)
+
+    def _acquire_clock_source_lock(self) -> None:
+        """Prevent two MuJoCo clock sources in the same ROS domain."""
+        domain = os.environ.get("ROS_DOMAIN_ID", "0")
+        safe_domain = "".join(
+            character if character.isalnum() else "_" for character in domain
+        )
+        lock_path = Path(tempfile.gettempdir()) / (
+            f"rebotarm_mujoco_clock_{os.getuid()}_domain_{safe_domain}.lock"
+        )
+        lock_fd = os.open(lock_path, os.O_CREAT | os.O_RDWR, 0o600)
+        try:
+            fcntl.flock(lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError as error:
+            os.close(lock_fd)
+            raise RuntimeError(
+                "Another RebotArm MuJoCo /clock source is already running "
+                f"in ROS domain {domain}. Stop it or use a different "
+                "ROS_DOMAIN_ID before starting another simulation."
+            ) from error
+        self._clock_lock_fd = lock_fd
 
     @staticmethod
     def _advance_schedule(
@@ -721,6 +760,17 @@ class RsMujocoSync(Node):
         ratio = np.clip(float(position) / visual_open, 0.0, 1.0)
         return float(ratio * _MUJOCO_GRIPPER_OPEN_M)
 
+    def _lock_arm_idle(self) -> None:
+        """Parking-brake-style lock for navigation without arm commands."""
+        self.data.qpos[self.arm_qpos_addrs] = self.arm_idle_position
+        self.data.qvel[self.arm_dof_addrs] = 0.0
+        self.data.qpos[self.gripper_qpos_addr] = self.gripper_idle_position
+        self.data.qpos[self.left_qpos_addr] = self.gripper_idle_position
+        self.data.qpos[self.right_qpos_addr] = self.gripper_idle_position
+        self.data.qvel[
+            [self.gripper_dof_addr, self.left_dof_addr, self.right_dof_addr]
+        ] = 0.0
+
     def _update(self) -> None:
         now = time.monotonic()
         # Viewer synchronization and occasional ROS scheduling delays can make
@@ -734,15 +784,17 @@ class RsMujocoSync(Node):
             or now - self.last_input_time <= self.stale_timeout
         )
         if not arm_command_active:
-            self.target_arm = self.data.qpos[self.arm_qpos_addrs].copy()
-            self.target_gripper = float(self.data.qpos[self.gripper_qpos_addr])
+            # Without a fresh arm command, keep actively driving to the parked
+            # pose instead of adopting whatever pose inertia has disturbed.
+            self.target_arm = self.arm_idle_position.copy()
+            self.target_gripper = self.gripper_idle_position
 
         viewer_lock = self.viewer.lock() if self.viewer is not None else nullcontext()
         with viewer_lock:
             if self.simulation_mode == "kinematic":
-                self._update_kinematic(dt, arm_command_active)
+                self._update_kinematic(dt)
             else:
-                self._update_physics(dt)
+                self._update_physics(dt, arm_command_active)
             if self._apply_target_pose_locked():
                 mujoco.mj_forward(self.model, self.data)
             self._publish_clock_locked()
@@ -762,28 +814,22 @@ class RsMujocoSync(Node):
                 self.viewer.close()
                 self.viewer = None
 
-    def _update_kinematic(self, dt: float, arm_command_active: bool) -> None:
-        if arm_command_active:
-            current = self.data.qpos[self.arm_qpos_addrs]
-            next_arm = current + self.smoothing_alpha * (self.target_arm - current)
-            self.data.qpos[self.arm_qpos_addrs] = next_arm
-            self.data.qvel[self.arm_dof_addrs] = 0.0
+    def _update_kinematic(self, dt: float) -> None:
+        current = self.data.qpos[self.arm_qpos_addrs]
+        next_arm = current + self.smoothing_alpha * (self.target_arm - current)
+        self.data.qpos[self.arm_qpos_addrs] = next_arm
+        self.data.qvel[self.arm_dof_addrs] = 0.0
 
-            current_gripper = float(self.data.qpos[self.gripper_qpos_addr])
-            next_gripper = current_gripper + self.smoothing_alpha * (
-                self.target_gripper - current_gripper
-            )
-            self.data.qpos[self.gripper_qpos_addr] = next_gripper
-            self.data.qpos[self.left_qpos_addr] = next_gripper
-            self.data.qpos[self.right_qpos_addr] = next_gripper
-            self.data.qvel[
-                [self.gripper_dof_addr, self.left_dof_addr, self.right_dof_addr]
-            ] = 0.0
-        else:
-            self.data.qvel[self.arm_dof_addrs] = 0.0
-            self.data.qvel[
-                [self.gripper_dof_addr, self.left_dof_addr, self.right_dof_addr]
-            ] = 0.0
+        current_gripper = float(self.data.qpos[self.gripper_qpos_addr])
+        next_gripper = current_gripper + self.smoothing_alpha * (
+            self.target_gripper - current_gripper
+        )
+        self.data.qpos[self.gripper_qpos_addr] = next_gripper
+        self.data.qpos[self.left_qpos_addr] = next_gripper
+        self.data.qpos[self.right_qpos_addr] = next_gripper
+        self.data.qvel[
+            [self.gripper_dof_addr, self.left_dof_addr, self.right_dof_addr]
+        ] = 0.0
 
         cmd_vel = self._active_cmd_vel()
         wheel_velocity = self._wheel_velocity_targets(cmd_vel)
@@ -870,13 +916,14 @@ class RsMujocoSync(Node):
             self.model.site_rgba[self.target_site_id] = rgba
         return True
 
-    def _update_physics(self, dt: float) -> None:
+    def _update_physics(self, dt: float, arm_command_active: bool) -> None:
         timestep = float(self.model.opt.timestep)
         self._physics_step_accumulator += dt
         steps = int(self._physics_step_accumulator / timestep)
         if steps < 1:
             return
         self._physics_step_accumulator -= steps * timestep
+        lock_idle_arm = self.arm_idle_lock and not arm_command_active
         for _ in range(steps):
             q = self.data.qpos[self.arm_qpos_addrs]
             qd = self.data.qvel[self.arm_dof_addrs]
@@ -900,6 +947,10 @@ class RsMujocoSync(Node):
             if self.agv_drive_mode == "velocity":
                 self._apply_base_velocity_control()
             mujoco.mj_step(self.model, self.data)
+            if lock_idle_arm:
+                self._lock_arm_idle()
+        if lock_idle_arm:
+            mujoco.mj_forward(self.model, self.data)
 
     def _apply_wheel_physics_control(self) -> None:
         wheel_velocity_target = self._wheel_velocity_targets(self._active_cmd_vel())
@@ -1222,9 +1273,11 @@ class RsMujocoSync(Node):
         self.last_tf_publish_time = now
 
     def _reset(self, _request, response):
+        reset_epoch = self._simulation_time()
         mujoco.mj_resetData(self.model, self.data)
-        self.target_arm.fill(0.0)
-        self.target_gripper = 0.0
+        self._sim_time_epoch = reset_epoch
+        self.target_arm = self.arm_idle_position.copy()
+        self.target_gripper = self.gripper_idle_position
         self._cmd_vel.fill(0.0)
         self._cmd_vel_time = None
         self._last_update_time = time.monotonic()
@@ -1234,6 +1287,8 @@ class RsMujocoSync(Node):
         self.last_odom_publish_time = 0.0
         self.last_tf_publish_time = 0.0
         self.last_laser_publish_time = 0.0
+        self.last_object_publish_time = 0.0
+        self.last_base_pose_publish_time = 0.0
         self.last_clock_publish_sim_time = -np.inf
         self.last_imu_publish_sim_time = -np.inf
         self._physics_step_accumulator = 0.0
@@ -1246,7 +1301,12 @@ class RsMujocoSync(Node):
         if self.viewer is not None:
             self.viewer.close()
             self.viewer = None
-        return super().destroy_node()
+        result = super().destroy_node()
+        if self._clock_lock_fd is not None:
+            fcntl.flock(self._clock_lock_fd, fcntl.LOCK_UN)
+            os.close(self._clock_lock_fd)
+            self._clock_lock_fd = None
+        return result
 
 
 def main(args=None) -> None:

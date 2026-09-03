@@ -20,6 +20,12 @@ def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument("use_viewer", default_value="true"),
         DeclareLaunchArgument("use_rviz", default_value="true"),
+        DeclareLaunchArgument(
+            "arm_idle_position",
+            default_value="[0.0, 0.0, 0.0, 0.0, 0.0, 0.0]",
+        ),
+        DeclareLaunchArgument("gripper_idle_position", default_value="0.0"),
+        DeclareLaunchArgument("arm_idle_lock", default_value="true"),
         DeclareLaunchArgument("slam_params_file", default_value=default_slam_params),
         DeclareLaunchArgument("rviz_config", default_value=default_rviz),
         IncludeLaunchDescription(
@@ -28,6 +34,11 @@ def generate_launch_description():
             ),
             launch_arguments={
                 "use_viewer": LaunchConfiguration("use_viewer"),
+                "arm_idle_position": LaunchConfiguration("arm_idle_position"),
+                "gripper_idle_position": LaunchConfiguration(
+                    "gripper_idle_position"
+                ),
+                "arm_idle_lock": LaunchConfiguration("arm_idle_lock"),
             }.items(),
         ),
         IncludeLaunchDescription(

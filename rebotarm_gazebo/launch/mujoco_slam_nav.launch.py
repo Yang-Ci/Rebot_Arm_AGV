@@ -8,7 +8,7 @@ from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
-from launch_ros.actions import Node
+from launch_ros.actions import Node, ROSTimer, SetUseSimTime
 from launch_ros.descriptions import ParameterFile
 from nav2_common.launch import RewrittenYaml
 
@@ -46,8 +46,15 @@ def generate_launch_description():
     ]
 
     return LaunchDescription([
+        SetUseSimTime(True),
         DeclareLaunchArgument("use_viewer", default_value="true"),
         DeclareLaunchArgument("use_rviz", default_value="true"),
+        DeclareLaunchArgument(
+            "arm_idle_position",
+            default_value="[0.0, 0.0, 0.0, 0.0, 0.0, 0.0]",
+        ),
+        DeclareLaunchArgument("gripper_idle_position", default_value="0.0"),
+        DeclareLaunchArgument("arm_idle_lock", default_value="true"),
         DeclareLaunchArgument("params_file", default_value=default_params),
         DeclareLaunchArgument("slam_params_file", default_value=default_slam_params),
         DeclareLaunchArgument("autostart", default_value="true"),
@@ -55,7 +62,14 @@ def generate_launch_description():
             PythonLaunchDescriptionSource(
                 os.path.join(share, "launch", "mujoco_lab.launch.py")
             ),
-            launch_arguments={"use_viewer": use_viewer}.items(),
+            launch_arguments={
+                "use_viewer": use_viewer,
+                "arm_idle_position": LaunchConfiguration("arm_idle_position"),
+                "gripper_idle_position": LaunchConfiguration(
+                    "gripper_idle_position"
+                ),
+                "arm_idle_lock": LaunchConfiguration("arm_idle_lock"),
+            }.items(),
         ),
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
@@ -116,16 +130,19 @@ def generate_launch_description():
             parameters=common_parameters,
             remappings=remappings,
         ),
-        Node(
-            package="nav2_lifecycle_manager",
-            executable="lifecycle_manager",
-            name="lifecycle_manager_navigation",
-            output="screen",
-            parameters=[{
-                "autostart": autostart,
-                "node_names": lifecycle_nodes,
-                "use_sim_time": True,
-            }],
+        ROSTimer(
+            period=0.5,
+            actions=[Node(
+                package="nav2_lifecycle_manager",
+                executable="lifecycle_manager",
+                name="lifecycle_manager_navigation",
+                output="screen",
+                parameters=[{
+                    "autostart": autostart,
+                    "node_names": lifecycle_nodes,
+                    "use_sim_time": True,
+                }],
+            )],
         ),
         Node(
             package="rviz2",

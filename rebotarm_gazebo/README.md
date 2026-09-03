@@ -127,7 +127,10 @@ for headless simulation; launches containing RViz also accept
 `params_file`, `slam_params_file`, and `autostart`. The default limits are
 `0.80 m/s` forward, `0.50 m/s` reverse, and `1.80 rad/s` yaw. All four launches
 accept `agv_max_linear_velocity`, `agv_max_reverse_velocity`, and
-`agv_max_angular_velocity` overrides.
+`agv_max_angular_velocity` overrides. They also accept `arm_idle_position` and
+`gripper_idle_position`; both default to the closed zero/home pose so the arm
+remains actively parked while the AGV navigates. `arm_idle_lock` defaults to
+true and suppresses wheel-ground contact vibration in the parked arm.
 
 To drive manually while mapping:
 

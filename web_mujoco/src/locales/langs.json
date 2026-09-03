@@ -1,0 +1,5 @@
+[
+  { "id": "zh", "flag": "🇨🇳", "label": "中文", "html": "zh-CN" },
+  { "id": "ja", "flag": "🇯🇵", "label": "日本語", "html": "ja" },
+  { "id": "en", "flag": "🇬🇧", "label": "English", "html": "en" }
+]
