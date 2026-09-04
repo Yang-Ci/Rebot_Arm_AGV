@@ -4,11 +4,12 @@ import ja from './locales/ja.json';
 import en from './locales/en.json';
 
 const STORAGE_KEY = 'web_mujoco.lang';
+const DEFAULT_LANG = 'en';
 const TABLES = { zh, ja, en };
 
 export const LANGS = langs;
 
-let lang = 'zh';
+let lang = DEFAULT_LANG;
 const listeners = new Set();
 
 function readStored() {
@@ -18,20 +19,20 @@ function readStored() {
   } catch {
     /* ignore */
   }
-  return 'zh';
+  return DEFAULT_LANG;
 }
 
 function langMeta(id = lang) {
-  return LANGS.find((item) => item.id === id) || LANGS[0];
+  return LANGS.find((item) => item.id === id) || LANGS.find((item) => item.id === DEFAULT_LANG);
 }
 
 function tableFor(id) {
-  return TABLES[id] || TABLES.zh;
+  return TABLES[id] || TABLES[DEFAULT_LANG];
 }
 
 export function t(key, vars) {
   const current = tableFor(lang);
-  const fallback = TABLES.zh;
+  const fallback = TABLES[DEFAULT_LANG];
   let text = current[key] || fallback[key] || key;
   if (vars) {
     Object.entries(vars).forEach(([name, value]) => {

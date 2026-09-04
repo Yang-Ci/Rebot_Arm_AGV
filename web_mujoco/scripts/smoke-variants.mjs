@@ -120,6 +120,13 @@ async function main() {
   controller.apply();
   const freeJointId = mujoco.mj_name2id(agv.model, jointType, 'agv_freejoint');
   const dof = agv.model.jnt_dofadr[freeJointId];
+  const qpos = agv.model.jnt_qposadr[freeJointId];
+  const actuatorType = mujoco.mjtObj.mjOBJ_ACTUATOR.value;
+  const wheelControls = ['front_left', 'front_right', 'rear_left', 'rear_right'].map((wheel) => {
+    const id = mujoco.mj_name2id(agv.model, actuatorType, `wheel_${wheel}_motor`);
+    return agv.data.ctrl[id];
+  });
+  assert(wheelControls.every((value) => value > 0), 'AGV 正向指令的车轮转速方向错误');
   assert(Math.hypot(agv.data.qvel[dof], agv.data.qvel[dof + 1]) > 0.29, 'AGV 线速度指令未写入');
   assert(Math.abs(agv.data.qvel[dof + 5] - 0.4) < 1e-9, 'AGV 角速度指令未写入');
 
@@ -128,6 +135,42 @@ async function main() {
     beforeStep: () => controller.apply(),
     afterStep: () => controller.enforceHeldPose()
   });
+
+  physics.reset();
+  controller.setPlanarPose(3.65, 0, 0);
+  const collisionStartHeight = agv.data.qpos[qpos + 2];
+  let maximumCollisionX = agv.data.qpos[qpos];
+  let maximumCollisionLift = 0;
+  let maximumCollisionTilt = 0;
+  controller.setCommand(0.65, 0);
+  for (let step = 0; step < 500; step += 1) {
+    physics.step(1);
+    maximumCollisionX = Math.max(maximumCollisionX, agv.data.qpos[qpos]);
+    maximumCollisionLift = Math.max(
+      maximumCollisionLift,
+      agv.data.qpos[qpos + 2] - collisionStartHeight
+    );
+    maximumCollisionTilt = Math.max(
+      maximumCollisionTilt,
+      Math.hypot(agv.data.qpos[qpos + 4], agv.data.qpos[qpos + 5])
+    );
+  }
+  controller.stop();
+  assert(maximumCollisionX <= 3.651, `AGV 越过东侧安全边界：x=${maximumCollisionX}`);
+  assert(
+    maximumCollisionLift < 0.03 && maximumCollisionTilt < 0.08,
+    `AGV 顶住墙壁后被抬起：lift=${maximumCollisionLift.toFixed(4)}, ` +
+      `tilt=${maximumCollisionTilt.toFixed(4)}`
+  );
+  const blockedX = agv.data.qpos[qpos];
+  controller.setCommand(-0.3, 0);
+  for (let step = 0; step < 100; step += 1) physics.step(1);
+  controller.stop();
+  assert(
+    agv.data.qpos[qpos] < blockedX - 0.025,
+    `AGV 顶墙后无法反向退出：before=${blockedX}, after=${agv.data.qpos[qpos]}`
+  );
+
   physics.reset();
   const navigation = createAgvNavigation({
     drive: controller,

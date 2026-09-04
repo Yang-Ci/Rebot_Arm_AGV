@@ -29,6 +29,7 @@ const NAV_ARRIVAL_CHECK_MS = 360;
 const NAV_ARRIVAL_HOLD_MS = 620;
 const NAV_ARRIVAL_FADE_MS = 260;
 const MAX_CONTACT_VISUALS = 40;
+const INITIAL_NAV_PATH_CAPACITY = 512;
 const MOVABLE_OBJECT_BODY_NAMES = new Set(['red_cube', 'blue_block', 'yellow_cylinder']);
 const PRESENTATION_OFFSET = { x: 0.055, y: -0.035, z: 0.072 };
 const EXPLOSION_STAGE_KEYS = [
@@ -40,6 +41,16 @@ function explosionStageForBody(bodyName) {
   const link = bodyName.match(/^link([1-6])$/)?.[1];
   if (link) return 7 - Number(link);
   return 7;
+}
+
+function createNavigationPathBuffer(capacity) {
+  const positions = new Float32Array(capacity * 3);
+  const positionAttribute = new THREE.BufferAttribute(positions, 3);
+  positionAttribute.setUsage(THREE.DynamicDrawUsage);
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', positionAttribute);
+  geometry.setDrawRange(0, 0);
+  return { capacity, geometry, positions, positionAttribute };
 }
 
 function partKind(name) {
@@ -494,11 +505,17 @@ export function createSceneView(host, options = {}) {
   targetGhost.layers.set(MAIN_VIEW_HELPER_LAYER);
   scene.add(targetGhost);
 
+  const dragErrorPositions = new Float32Array(6);
+  const dragErrorPositionAttribute = new THREE.BufferAttribute(dragErrorPositions, 3);
+  dragErrorPositionAttribute.setUsage(THREE.DynamicDrawUsage);
+  const dragErrorGeometry = new THREE.BufferGeometry();
+  dragErrorGeometry.setAttribute('position', dragErrorPositionAttribute);
   const dragErrorLine = new THREE.Line(
-    new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]),
+    dragErrorGeometry,
     new THREE.LineBasicMaterial({ color: 0xff6b5f, transparent: true, opacity: 0.82 })
   );
   dragErrorLine.visible = false;
+  dragErrorLine.frustumCulled = false;
   dragErrorLine.layers.set(MAIN_VIEW_HELPER_LAYER);
   scene.add(dragErrorLine);
 
@@ -568,7 +585,8 @@ export function createSceneView(host, options = {}) {
   navigationGoalCheck.layers.set(MAIN_VIEW_HELPER_LAYER);
   scene.add(navigationGoalCheck);
   let navigationArrivalStartedAt = null;
-  const navigationPathGeometry = new THREE.BufferGeometry();
+  let navigationPathBuffer = createNavigationPathBuffer(INITIAL_NAV_PATH_CAPACITY);
+  let navigationPathGeometry = navigationPathBuffer.geometry;
   const navigationPath = new THREE.Line(
     navigationPathGeometry,
     new THREE.LineBasicMaterial({
@@ -579,6 +597,7 @@ export function createSceneView(host, options = {}) {
     })
   );
   navigationPath.visible = false;
+  navigationPath.frustumCulled = false;
   navigationPath.renderOrder = 19;
   navigationPath.layers.set(MAIN_VIEW_HELPER_LAYER);
   scene.add(navigationPath);
@@ -1116,11 +1135,29 @@ export function createSceneView(host, options = {}) {
 
   function setNavigationPath(points, state = 'selected') {
     const path = Array.isArray(points) ? points : [];
-    navigationPath.visible = path.length >= 2;
+    const count = path.length;
+    navigationPath.visible = count >= 2;
+    if (count > navigationPathBuffer.capacity) {
+      let capacity = navigationPathBuffer.capacity;
+      while (capacity < count) capacity *= 2;
+      const previousGeometry = navigationPathGeometry;
+      navigationPathBuffer = createNavigationPathBuffer(capacity);
+      navigationPathGeometry = navigationPathBuffer.geometry;
+      navigationPath.geometry = navigationPathGeometry;
+      previousGeometry.dispose();
+    }
+    navigationPathGeometry.setDrawRange(0, navigationPath.visible ? count : 0);
     if (!navigationPath.visible) return;
-    navigationPathGeometry.setFromPoints(
-      path.map((point) => new THREE.Vector3(point.x, point.y, 0.012))
-    );
+    for (let index = 0; index < count; index += 1) {
+      const point = path[index];
+      const offset = index * 3;
+      navigationPathBuffer.positions[offset] = point.x;
+      navigationPathBuffer.positions[offset + 1] = point.y;
+      navigationPathBuffer.positions[offset + 2] = 0.012;
+    }
+    navigationPathBuffer.positionAttribute.clearUpdateRanges();
+    navigationPathBuffer.positionAttribute.addUpdateRange(0, count * 3);
+    navigationPathBuffer.positionAttribute.needsUpdate = true;
     const colors = { selected: 0x35d9ff, active: 0xffbd4a, reached: 0x41e28b };
     navigationPath.material.color.setHex(colors[state] || colors.selected);
   }
@@ -1289,7 +1326,13 @@ export function createSceneView(host, options = {}) {
     const showLine = Boolean(dragMode && dragging && tcp && target && tcp.distanceTo(target) > 0.001);
     dragErrorLine.visible = showLine;
     if (showLine) {
-      dragErrorLine.geometry.setFromPoints([tcp, target]);
+      dragErrorPositions[0] = tcp.x;
+      dragErrorPositions[1] = tcp.y;
+      dragErrorPositions[2] = tcp.z;
+      dragErrorPositions[3] = target.x;
+      dragErrorPositions[4] = target.y;
+      dragErrorPositions[5] = target.z;
+      dragErrorPositionAttribute.needsUpdate = true;
     }
   }
 
@@ -1593,6 +1636,8 @@ export function createSceneView(host, options = {}) {
       renderer.domElement.removeEventListener('contextmenu', onContextMenu);
       window.removeEventListener('keydown', onSelectionKeyDown);
       clear();
+      dragErrorGeometry.dispose();
+      dragErrorLine.material.dispose();
       selectionHelper.geometry.dispose();
       selectionHelper.material.dispose();
       contactPointGeometry.dispose();

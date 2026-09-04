@@ -1,3 +1,9 @@
+import {
+  AGV_FOOTPRINT_CLEARANCE,
+  AGV_NAV_BOUNDS,
+  LAB_NAV_OBSTACLES
+} from './agv-path-planner.js';
+
 const WHEEL_JOINTS = [
   'wheel_front_left_joint',
   'wheel_front_right_joint',
@@ -28,7 +34,7 @@ function namedId(mujoco, model, type, name) {
   return id;
 }
 
-/** Browser equivalent of the AGV velocity controller in mujoco_sync.py. */
+/** Collision-aware velocity controller for the browser simulation. */
 export function createAgvController(mujoco, model, data) {
   const jointType = mujoco.mjtObj.mjOBJ_JOINT.value;
   const actuatorType = mujoco.mjtObj.mjOBJ_ACTUATOR.value;
@@ -39,6 +45,7 @@ export function createAgvController(mujoco, model, data) {
   const baseDofAddress = model.jnt_dofadr[baseJointId];
   const baseHeight = data.qpos[baseQposAddress + 2];
   const baseBodyId = namedId(mujoco, model, bodyType, 'base_link');
+  const dynamicPalletBodyId = mujoco.mj_name2id(model, bodyType, 'dynamic_pallet');
   const dockAnchorBodyId = mujoco.mj_name2id(model, bodyType, 'agv_dock_anchor');
   const dockAnchorMocapId =
     dockAnchorBodyId >= 0 ? model.body_mocapid[dockAnchorBodyId] : -1;
@@ -100,10 +107,87 @@ export function createAgvController(mujoco, model, data) {
     setCommand(0, 0);
   }
 
+  function collisionConstrainedVelocity(forwardX, forwardY) {
+    let velocityX = forwardX * command.linear;
+    let velocityY = forwardY * command.linear;
+    let blocked = false;
+    const x = data.qpos[baseQposAddress];
+    const y = data.qpos[baseQposAddress + 1];
+    const lookahead = Math.max(model.opt.timestep, 0.002) * 2;
+    const nextX = x + velocityX * lookahead;
+    const nextY = y + velocityY * lookahead;
+
+    if (nextX < AGV_NAV_BOUNDS.minX && velocityX < 0) {
+      velocityX = 0;
+      blocked = true;
+    } else if (nextX > AGV_NAV_BOUNDS.maxX && velocityX > 0) {
+      velocityX = 0;
+      blocked = true;
+    }
+    if (nextY < AGV_NAV_BOUNDS.minY && velocityY < 0) {
+      velocityY = 0;
+      blocked = true;
+    } else if (nextY > AGV_NAV_BOUNDS.maxY && velocityY > 0) {
+      velocityY = 0;
+      blocked = true;
+    }
+
+    for (const configuredObstacle of LAB_NAV_OBSTACLES) {
+      let obstacleX = configuredObstacle.x;
+      let obstacleY = configuredObstacle.y;
+      if (configuredObstacle.id === 'dynamic-pallet' && dynamicPalletBodyId >= 0) {
+        obstacleX = data.xpos[dynamicPalletBodyId * 3];
+        obstacleY = data.xpos[dynamicPalletBodyId * 3 + 1];
+      }
+      const closestX = Math.max(
+        obstacleX - configuredObstacle.halfX,
+        Math.min(obstacleX + configuredObstacle.halfX, nextX)
+      );
+      const closestY = Math.max(
+        obstacleY - configuredObstacle.halfY,
+        Math.min(obstacleY + configuredObstacle.halfY, nextY)
+      );
+      let normalX = nextX - closestX;
+      let normalY = nextY - closestY;
+      let distance = Math.hypot(normalX, normalY);
+      if (distance >= AGV_FOOTPRINT_CLEARANCE) continue;
+      if (distance < 1e-9) {
+        const relativeX = nextX - obstacleX;
+        const relativeY = nextY - obstacleY;
+        const exitX = configuredObstacle.halfX - Math.abs(relativeX);
+        const exitY = configuredObstacle.halfY - Math.abs(relativeY);
+        if (exitX < exitY) {
+          normalX = Math.sign(relativeX) || 1;
+          normalY = 0;
+        } else {
+          normalX = 0;
+          normalY = Math.sign(relativeY) || 1;
+        }
+        distance = 1;
+      }
+      const unitX = normalX / distance;
+      const unitY = normalY / distance;
+      const outwardSpeed = velocityX * unitX + velocityY * unitY;
+      if (outwardSpeed >= 0) continue;
+      velocityX -= outwardSpeed * unitX;
+      velocityY -= outwardSpeed * unitY;
+      blocked = true;
+    }
+    return { velocityX, velocityY, angular: blocked ? 0 : command.angular };
+  }
+
   function apply() {
     syncReleasedDockAnchor();
-    const leftTarget = (command.linear - 0.5 * wheelTrack * command.angular) / wheelRadius;
-    const rightTarget = (command.linear + 0.5 * wheelTrack * command.angular) / wheelRadius;
+    const xmatOffset = baseBodyId * 9;
+    const constrained = collisionConstrainedVelocity(
+      data.xmat[xmatOffset],
+      data.xmat[xmatOffset + 3]
+    );
+    const effectiveLinear =
+      constrained.velocityX * data.xmat[xmatOffset] +
+      constrained.velocityY * data.xmat[xmatOffset + 3];
+    const leftTarget = (effectiveLinear - 0.5 * wheelTrack * constrained.angular) / wheelRadius;
+    const rightTarget = (effectiveLinear + 0.5 * wheelTrack * constrained.angular) / wheelRadius;
     const targets = [leftTarget, rightTarget, leftTarget, rightTarget];
 
     wheelDofAddresses.forEach((dofAddress, index) => {
@@ -114,14 +198,11 @@ export function createAgvController(mujoco, model, data) {
       );
     });
 
-    // Match the ROS bridge's velocity mode so browser driving is predictable
-    // while wheel rotation and contact forces remain visible in MuJoCo.
-    const xmatOffset = baseBodyId * 9;
-    data.qvel[baseDofAddress] = data.xmat[xmatOffset] * command.linear;
-    data.qvel[baseDofAddress + 1] = data.xmat[xmatOffset + 3] * command.linear;
+    data.qvel[baseDofAddress] = constrained.velocityX;
+    data.qvel[baseDofAddress + 1] = constrained.velocityY;
     data.qvel[baseDofAddress + 3] = 0;
     data.qvel[baseDofAddress + 4] = 0;
-    data.qvel[baseDofAddress + 5] = command.angular;
+    data.qvel[baseDofAddress + 5] = constrained.angular;
   }
 
   function state() {
