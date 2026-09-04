@@ -259,6 +259,18 @@ export function createGraspDemo({
     reactionCenterPose = null;
     pendingFailureReason = '';
     ikAngles = currentArmPose();
+    pregraspPose = null;
+    pregraspAlignedPose = null;
+    alignmentJoint1 = null;
+    // The stack path uses the original IK entry; pre-aligning J1 for red
+    // sweeps the wrist through the yellow cylinder.
+    if (nextMode === 'stack') {
+      message = '';
+      lastUpdateAt = data.time;
+      physics.setTarget('joint7', OPEN_WIDTH);
+      enter('opening');
+      return;
+    }
     pregraspPose = { ...ikAngles };
     alignmentJoint1 = targetJoint1For(objectStart, ikAngles.joint1);
     pregraspAlignedPose = { ...pregraspPose, joint1: alignmentJoint1 };

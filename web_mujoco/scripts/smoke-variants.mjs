@@ -60,6 +60,27 @@ function contactNames(mujoco, model, data) {
   return [...new Set(names)];
 }
 
+function armYellowContactNames(mujoco, model, data, armBodyIds) {
+  const bodyType = mujoco.mjtObj.mjOBJ_BODY.value;
+  const yellowBodyId = mujoco.mj_name2id(model, bodyType, 'yellow_cylinder');
+  const geomType = mujoco.mjtObj.mjOBJ_GEOM.value;
+  const names = [];
+  const count = Math.min(data.ncon, data.contact.size());
+  for (let index = 0; index < count; index += 1) {
+    const contact = data.contact.get(index);
+    if (!contact) continue;
+    const body1 = model.geom_bodyid[contact.geom1];
+    const body2 = model.geom_bodyid[contact.geom2];
+    const yellowInvolved = body1 === yellowBodyId || body2 === yellowBodyId;
+    const otherBody = body1 === yellowBodyId ? body2 : body1;
+    if (!yellowInvolved || !armBodyIds.has(otherBody)) continue;
+    const geom1 = mujoco.mj_id2name(model, geomType, contact.geom1) || `geom#${contact.geom1}`;
+    const geom2 = mujoco.mj_id2name(model, geomType, contact.geom2) || `geom#${contact.geom2}`;
+    names.push(`${geom1}<->${geom2}`);
+  }
+  return [...new Set(names)];
+}
+
 async function compileVariant(mujoco, variant) {
   const vfs = new mujoco.MjVFS();
   const files = await addXmlTree(vfs, variant.sceneXml);
@@ -179,14 +200,40 @@ async function main() {
     workspaceOffset: GRASP_WORKSPACE_OFFSET,
     getObserverPosition: () => ({ x: 5.8, y: -6.8, z: 4.8 })
   });
+  const armBodyIds = new Set([
+    'base_link',
+    'link1',
+    'link2',
+    'link3',
+    'link4',
+    'link5',
+    'link6',
+    'gripper_end',
+    'gripper_coupler',
+    'gripper_left',
+    'gripper_right'
+  ].map((name) => mujoco.mj_name2id(agv.model, bodyType, name)));
+  const armYellowContacts = [];
   stack.startStack();
   for (let frame = 0; frame < 12000 && stack.isRunning(); frame += 1) {
     stack.update();
     physics.step(12);
+    const contacts = armYellowContactNames(mujoco, agv.model, agv.data, armBodyIds);
+    if (contacts.length && stack.state().selectedId === 'red') {
+      armYellowContacts.push({
+        stage: stack.state().stage,
+        selectedId: stack.state().selectedId,
+        contacts
+      });
+    }
   }
   assert(
     stack.state().stage === 'complete',
     `AGV 停靠后的叠叠乐未完成：${stack.state().stage}/${stack.state().message}`
+  );
+  assert(
+    armYellowContacts.length === 0,
+    `AGV 叠叠乐时机械臂撞到黄色圆柱：${JSON.stringify(armYellowContacts.slice(0, 12))}`
   );
 
   console.log(`variants ok: arm=${armGeomCount} geoms, agv=${agv.model.ngeom} geoms, navigation/grasp/stack=ok`);
