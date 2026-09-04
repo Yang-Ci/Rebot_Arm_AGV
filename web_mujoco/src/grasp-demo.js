@@ -117,16 +117,17 @@ export function createGraspDemo({
     throw new Error('抓取演示缺少颜色目标 body');
   }
 
-  let selectedId = targets[0].id;
-  let running = false;
-  let stage = 'idle';
-  let stageStartedAt = 0;
-  let lastUpdateAt = 0;
-  let ikAngles = {};
-  let objectStart = null;
-  let moveTarget = null;
-  let dropTarget = null;
-  let mode = 'put-away';
+ let selectedId = targets[0].id;
+ let running = false;
+ let stage = 'idle';
+ let stageStartedAt = 0;
+ let lastUpdateAt = 0;
+ let ikAngles = {};
+ let objectStart = null;
+ let moveTarget = null;
+ let dropTarget = null;
+  let safeApproachPoint = null;
+ let mode = 'put-away';
   let stackQueue = [];
   let pendingStackId = null;
   let expectedSupportBodyId = tableBodyId;
@@ -239,12 +240,29 @@ export function createGraspDemo({
     });
   }
 
-  function begin(nextId, nextDropTarget, nextMode = 'put-away') {
+ function begin(nextId, nextDropTarget, nextMode = 'put-away') {
+    function computeSafeApproachPoint(id, start) {
+      const point = { x: start.x, y: start.y, z: start.z + 0.10 };
+      if (!(mode === 'stack' && id === 'red')) return point;
+      const yellowBody = targets.find((target) => target.id === 'yellow').bodyId;
+      const obstacle = bodyPosition(yellowBody);
+      const dx = start.x - obstacle.x;
+      const dy = start.y - obstacle.y;
+      const dist = Math.hypot(dx, dy);
+      const safeDistance = 0.07;
+      if (dist < 0.001) return point;
+      const scale = safeDistance / dist;
+      point.x += dx * scale;
+      point.y += dy * scale;
+      return point;
+    }
+
     selectedId = nextId;
     pendingStackId = null;
     mode = nextMode;
     objectStart = bodyPosition(selected().bodyId);
     dropTarget = nextDropTarget;
+    safeApproachPoint = computeSafeApproachPoint(nextId, objectStart);
     expectedSupportBodyId =
       nextMode === 'stack' && nextId === 'red'
         ? targets.find((target) => target.id === 'blue').bodyId
@@ -260,7 +278,7 @@ export function createGraspDemo({
     pendingFailureReason = '';
     ikAngles = currentArmPose();
     pregraspPose = { ...ikAngles };
-    alignmentJoint1 = targetJoint1For(objectStart, ikAngles.joint1);
+    alignmentJoint1 = targetJoint1For(safeApproachPoint, ikAngles.joint1);
     pregraspAlignedPose = { ...pregraspPose, joint1: alignmentJoint1 };
     message = '';
     lastUpdateAt = data.time;
@@ -545,7 +563,7 @@ export function createGraspDemo({
     } else if (stage === 'opening') {
       const width = data.qpos[joints.byName.joint7.qposadr];
       if ((width > OPEN_WIDTH - 0.006 && elapsed > 0.18) || elapsed > 1.1) {
-        enter('approach', { x: objectStart.x, y: objectStart.y, z: objectStart.z + 0.10 });
+        enter('approach', safeApproachPoint);
       }
     } else if (stage === 'approach') {
       if (moveStep(dt)) enter('descend', { x: objectStart.x, y: objectStart.y, z: objectStart.z + 0.003 });
@@ -645,6 +663,7 @@ export function createGraspDemo({
     pregraspPose = null;
     pregraspAlignedPose = null;
     alignmentJoint1 = null;
+    safeApproachPoint = null;
     lastError = 0;
     message = '';
     notify();
